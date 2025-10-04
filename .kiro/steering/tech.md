@@ -154,128 +154,727 @@ Mastraで構築可能なAIエージェントの具体的な応用例には以下
 
 # Amazon Bedrock AgentCoreについて
 
-## 🛡️ Amazon Bedrock AgentCore: エンタープライズ向けAIエージェント実行基盤
+## Amazon Bedrock AgentCore 概要
+Amazon Bedrock AgentCoreは、エンタープライズグレードのセキュリティ、信頼性、ガバナンスを確保しながら、AIエージェントを本番環境で安全にスケール展開するためのフルマネージドサービス群です。
 
-### 🚀 概要
+## 🎯 主な特徴
 
-Amazon Bedrock AgentCoreは、あらゆるフレームワークやLLM上で動作するAIエージェントを、エンタープライズグレードのセキュリティ、信頼性、ガバナンスを確保しながら、プロトタイプ(PoC)から本番環境へ安全にスケール展開するためのフルマネージドサービス群です。
+- フレームワーク・モデル非依存: LangGraph、CrewAI、Strands Agentsなど、任意のオープンソースフレームワークと任意のモデルをサポート
+- ゼロインフラ管理: インフラストラクチャの管理をAWSが完全に肩代わり
+- エンタープライズセキュリティ: セッション隔離、ID管理、ツールアクセス制御が組み込み済み
+- 従量課金制: 初期費用や最低料金なしの柔軟な料金体系
 
-AIエージェントのインフラストラクチャ管理や複雑なセキュリティ要件をAWSが肩代わりすることで、開発者はエージェントのロジック開発に集中し、市場投入までの時間(Time to Value)を短縮できます。
+## 🛠️ 主要コンポーネント
 
-| 項目 | 詳細 |
-|------|------|
-| 提供形態 | フルマネージドサービス |
-| 特徴 | フレームワーク・モデル非依存の実行基盤。エンタープライズ向けのセキュリティ・ガバナンス機能が組み込み済み |
-| 目的 | AIエージェントの本番環境へのデプロイ、スケーリング、運用を加速・簡素化 |
-| 対応フレームワーク | LangGraph、CrewAI、Strands Agentなど、主要なオープンソースフレームワークをサポート |
+1. AgentCore Runtime（実行環境）
+目的: AIエージェントとツールのセキュアなサーバーレス実行基盤
+特徴:
+最大8時間の長時間ワークロード対応
+高速コールドスタート
+完全なセッション分離
+マルチモーダルペイロード対応
+組み込みアイデンティティ管理
 
-### 🛠️ 主要な機能とコンポーネント
+2. AgentCore Identity（認証・認可）
+目的: エージェントのアイデンティティとアクセス管理
+特徴:
+既存のIDプロバイダとの互換性
+セキュアなトークンボルト
+最小権限アクセス
+セキュアな権限委譲
 
-AgentCoreは、エージェントを大規模に運用するために不可欠な以下の機能を、マネージドサービスとして提供します。
+3. AgentCore Memory（記憶管理）
+目的: コンテキスト認識エージェントの構築支援
+特徴:
+短期メモリ（マルチターン会話用）
+長期メモリ（エージェント・セッション間共有）
+複雑なメモリインフラ管理の排除
+業界最高レベルの精度
 
-#### 1. AgentCore Runtime(実行環境)
+4. AgentCore Code Interpreter（コード実行）
+目的: 隔離されたサンドボックス環境でのセキュアなコード実行
+特徴:
+Python、JavaScript、TypeScript対応
+エンタープライズセキュリティ要件対応
+高度な設定サポート
+人気フレームワークとのシームレス統合
 
-エージェントの実行を担う、セキュアなサーバーレスインフラストラクチャです。
+5. AgentCore Browser（ブラウザ自動化）
+目的: AIエージェントによるWebサイトとの大規模インタラクション
+特徴:
+高速でセキュアなクラウドベースブラウザランタイム
+エンタープライズグレードセキュリティ
+包括的な可観測性機能
+自動スケーリング
 
-- **セッション分離**: エージェント実行環境を完全に隔離し、データ漏えいを防ぎます
-- **長時間ワークロード**: 低遅延のリアルタイム処理に加え、最大8時間にわたる非同期かつ複雑なワークロードをサポートします
-- **スケーラビリティ**: 数千のエージェント呼び出しセッションへの自動スケールアップに対応します
-- **リカバリ**: チェックポイント作成とリカバリ機能により、処理の中断からの復旧をサポートします
+6. AgentCore Gateway（ツール統合）
+目的: エージェントがツールを発見・使用するためのセキュアな方法
+特徴:
+API、Lambda関数、既存サービスのエージェント対応ツール化
+数週間のカスタムコード開発を排除
+インフラプロビジョニングの自動化
+セキュリティ実装の簡素化
 
-#### 2. Built-in Tools(組み込みツール)
+7. AgentCore Observability（可観測性）
+目的: エージェントのトレース、デバッグ、パフォーマンス監視
+特徴:
+統一された運用ダッシュボード
+OpenTelemetry互換テレメトリサポート
+エージェントワークフローの詳細可視化
+本番環境での品質基準維持
 
-エージェントの能力を拡張するための、セキュリティが担保されたマネージドツールです。
+## 💡 主要な利用シナリオ
 
-**Code Interpreter**
+1. 組み込みツールと機能の活用
+ブラウザ自動化とコード解釈の組み込みツール活用
+内部・外部ツールとリソースのシームレス統合
+ユーザーとのインタラクションを記憶するエージェント作成
 
-エージェントがサンドボックス化された隔離環境でコードを実行する機能です。
+2. セキュアな大規模デプロイ
+フレームワーク、プロトコル、モデル選択に関係なく動的AIエージェントとツールをセキュアにデプロイ・スケール
+基盤リソースの管理なしでシームレスなエージェントアイデンティティとアクセス管理
 
-- **機能**: 計算、データ処理、可視化などを安全に実行できます
-- **対応言語**: Python、JavaScript、TypeScriptの実行ランタイムをプリビルトで提供
+3. テストと監視
+トークン使用量、レイテンシ、セッション継続時間、エラー率などの運用メトリクスのリアルタイム可視化
+エージェントの使用状況と運用メトリクスへの深い洞察
 
-**Browser Tool**
+## 🚀 開発者にとってのメリット
 
-エージェントがクラウドベースのブラウザを操作するための実行環境です。
+- 開発効率の向上: インフラ管理をAWSに委託し、エージェントロジックの開発に集中
+- 市場投入時間の短縮: 複雑なセキュリティ要件やスケーリングをAWSが処理
+- 柔軟性の確保: 任意のLLM、任意のオープンソースフレームワークを選択可能
+- エンタープライズ対応: 本番環境で求められる厳しいガバナンス要件を満たす
+Amazon Bedrock AgentCoreは、AIエージェントのプロトタイプから本番環境への移行を劇的に簡素化し、開発者がイノベーションに集中できる環境を提供する、まさに次世代のAIエージェント開発プラットフォームです！
 
-- **機能**: フォーム入力、サイトナビゲーション、Webスクレイピングなど、Web操作を安全かつスケーラブルに自動化します
-- **可視化**: ライブビューやセッション記録の再生により、エージェントのブラウザ操作を監視・検証できます
+## CDKによるサンプルコード
 
-#### 3. AgentCore Gateway(ゲートウェイ)
+```ts
+// lib/agentcore-infrastructure-stack.ts
+import * as cdk from 'aws-cdk-lib';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as rds from 'aws-cdk-lib/aws-rds';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
+import * as ecr from 'aws-cdk-lib/aws-ecr';
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
+import * as logs from 'aws-cdk-lib/aws-logs';
+import { Construct } from 'constructs';
 
-既存のエンタープライズリソースを、エージェントが利用できるツールに変換し、アクセスを管理する機能です。
+export class AgentCoreInfrastructureStack extends cdk.Stack {
+  public readonly agentCoreExecutionRole: iam.Role;
+  public readonly ecrRepository: ecr.Repository;
+  public readonly memoryDatabase: rds.ServerlessCluster;
+  public readonly agentMemoryTable: dynamodb.Table;
 
-- **ツール化の簡素化**: 既存のWeb APIやLambda関数などを、わずか数行のコードでエージェント対応ツールに変換します
-- **認証・認可の統合**: AgentCore Identityと連携し、エージェントの外部ツールへのアクセスに対するOAuthなどの認可(Outbound)を統合的に管理します
-- **インテリジェントなツール発見**: セマンティック検索により、登録された多数のツールの中から、タスクのコンテキストに基づいて適切なツールをエージェントが迅速に発見できます
+  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+    super(scope, id, props);
 
-#### 4. AgentCore Memory(記憶管理)
+    // VPC設定（AgentCore用）
+    const vpc = new ec2.Vpc(this, 'AgentCoreVPC', {
+      cidr: '10.0.0.0/16',
+      maxAzs: 2,
+      subnetConfiguration: [
+        {
+          name: 'public',
+          cidrMask: 24,
+          subnetType: ec2.SubnetType.PUBLIC,
+        },
+        {
+          name: 'private',
+          cidrMask: 24,
+          subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
+        },
+      ],
+    });
 
-エージェントの会話コンテキストと知識を管理する機能で、インフラ管理は不要です。
+    // AgentCore実行用IAMロール
+    this.agentCoreExecutionRole = new iam.Role(this, 'AgentCoreExecutionRole', {
+      assumedBy: new iam.ServicePrincipal('bedrock-agentcore.amazonaws.com'),
+      description: 'Execution role for Amazon Bedrock AgentCore',
+      managedPolicies: [
+        iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonBedrockFullAccess'),
+        iam.ManagedPolicy.fromAwsManagedPolicyName('CloudWatchLogsFullAccess'),
+        iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonRDSDataFullAccess'),
+        iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonDynamoDBFullAccess'),
+        iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMReadOnlyAccess'),
+      ],
+    });
 
-- **短期メモリ**: マルチターン会話向けの会話履歴をイベントとして保存し、セッション内のコンテキストを維持します
-- **長期メモリ**: 会話の要約、確認された知識、ユーザーの好みなど、セッションをまたいで引き継ぐべき重要な洞察を保存・検索できます
+    // X-Ray、CloudWatch、ECRアクセス権限を追加
+    this.agentCoreExecutionRole.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'xray:PutTraceSegments',
+          'xray:PutTelemetryRecords',
+          'xray:GetSamplingRules',
+          'xray:GetSamplingTargets',
+          'ecr:BatchGetImage',
+          'ecr:GetDownloadUrlForLayer',
+          'ecr:GetAuthorizationToken',
+          'bedrock-agentcore:*',
+        ],
+        resources: ['*'],
+      })
+    );
 
-#### 5. AgentCore Identity(認証・認可)
+    // ECRリポジトリ（エージェントコンテナ用）
+    this.ecrRepository = new ecr.Repository(this, 'AgentCoreRepository', {
+      repositoryName: 'agentcore-agents',
+      imageScanOnPush: true,
+      lifecycleRules: [
+        {
+          maxImageCount: 10,
+          description: 'Keep only 10 latest images',
+        },
+      ],
+    });
 
-エージェントのアクセス管理を統合し、エンタープライズレベルのセキュリティを実現します。
+    // Aurora Serverless PostgreSQL（Memory用）
+    this.memoryDatabase = new rds.ServerlessCluster(this, 'AgentCoreMemoryDB', {
+      engine: rds.DatabaseClusterEngine.auroraPostgres({
+        version: rds.AuroraPostgresEngineVersion.VER_13_13,
+      }),
+      vpc,
+      scaling: {
+        minCapacity: rds.AuroraCapacityUnit.ACU_2,
+        maxCapacity: rds.AuroraCapacityUnit.ACU_16,
+      },
+      deletionProtection: false,
+      defaultDatabaseName: 'agentcore_memory',
+    });
 
-- **連携**: Amazon Cognito、Microsoft Entra IDなどの既存のIDプロバイダとシームレスに連携できます
-- **統制**: エージェントのインバウンド/アウトバウンド両方の認証・認可を管理し、社内セキュリティポリシーに沿った安全な運用を可能にします
+    // DynamoDB（セッション管理用）
+    this.agentMemoryTable = new dynamodb.Table(this, 'AgentMemoryTable', {
+      partitionKey: {
+        name: 'sessionId',
+        type: dynamodb.AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'timestamp',
+        type: dynamodb.AttributeType.NUMBER,
+      },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      pointInTimeRecovery: true,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
 
-#### 6. AgentCore Observability(可観測性)
+    // Secrets Manager（認証情報管理）
+    const agentCoreSecrets = new secretsmanager.Secret(this, 'AgentCoreSecrets', {
+      description: 'AgentCore authentication and configuration secrets',
+      generateSecretString: {
+        secretStringTemplate: JSON.stringify({ username: 'agentcore' }),
+        generateStringKey: 'password',
+        excludeCharacters: '"@/\\',
+      },
+    });
 
-エージェントの動作状況を監視・分析するための機能です。
+    // CloudWatch Log Group
+    const logGroup = new logs.LogGroup(this, 'AgentCoreLogGroup', {
+      logGroupName: '/aws/bedrock-agentcore/agents',
+      retention: logs.RetentionDays.ONE_WEEK,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
 
-- **可視化**: 直感的なダッシュボードを通じて、エージェントのステップごとの動作、LLMの呼び出し回数、レイテンシなどを詳細に把握できます
-- **標準対応**: OpenTelemetry標準フォーマットに対応しており、Amazon CloudWatch、Datadog、LangSmith、Langfuseなど既存のオブザーバビリティツールとの連携が容易です
+    // Parameter Store設定
+    new ssm.StringParameter(this, 'AgentCoreExecutionRoleArn', {
+      parameterName: '/agentcore/execution-role-arn',
+      stringValue: this.agentCoreExecutionRole.roleArn,
+      description: 'AgentCore execution role ARN',
+    });
 
-### 🌟 AgentCoreの主な利点
+    new ssm.StringParameter(this, 'AgentCoreECRRepository', {
+      parameterName: '/agentcore/ecr-repository-uri',
+      stringValue: this.ecrRepository.repositoryUri,
+      description: 'AgentCore ECR repository URI',
+    });
 
-- **インフラ管理の排除**: エージェント実行のためのサーバーレスインフラ、スケーリング、高可用性、セキュリティ要件をすべてAWSがマネージドで提供
-- **高い柔軟性**: 任意のLLM、任意のオープンソースエージェントフレームワーク(LangChain、LangGraphなど)を選択してデプロイ・運用できます
-- **エンタープライズセキュリティ**: セッション隔離、ID管理、ツールアクセス制御が組み込まれており、本番環境で求められる厳しいガバナンス要件を満たします
-- **機能拡張の容易さ**: Code InterpreterやBrowser Toolなどの組み込みツール、およびGatewayによる既存APIのツール化により、エージェントの実行能力を迅速かつ安全に拡張できます
+    new ssm.StringParameter(this, 'AgentCoreMemoryDBEndpoint', {
+      parameterName: '/agentcore/memory-db-endpoint',
+      stringValue: this.memoryDatabase.clusterEndpoint.hostname,
+      description: 'AgentCore memory database endpoint',
+    });
 
----
+    // 出力
+    new cdk.CfnOutput(this, 'AgentCoreExecutionRoleArnOutput', {
+      value: this.agentCoreExecutionRole.roleArn,
+      description: 'AgentCore execution role ARN',
+      exportName: 'AgentCoreExecutionRoleArn',
+    });
 
-# x402について
+    new cdk.CfnOutput(this, 'ECRRepositoryUriOutput', {
+      value: this.ecrRepository.repositoryUri,
+      description: 'ECR repository URI for AgentCore agents',
+      exportName: 'AgentCoreECRRepositoryUri',
+    });
 
-## 💰 x402: AIエコノミーのためのインターネットネイティブ決済プロトコル
+    new cdk.CfnOutput(this, 'MemoryDatabaseEndpointOutput', {
+      value: this.memoryDatabase.clusterEndpoint.hostname,
+      description: 'Memory database endpoint',
+      exportName: 'AgentCoreMemoryDBEndpoint',
+    });
+  }
+}
+```
 
-### 🚀 概要
+AgentCore Memory リソース作成
 
-x402は、自律的なAIエージェントやAPI間のマイクロペイメント(超少額決済)をシームレスかつ摩擦なく実行するために設計された、新しい決済プロトコルです。
+```ts
+// lib/agentcore-memory-stack.ts
+import * as cdk from 'aws-cdk-lib';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import * as cr from 'aws-cdk-lib/custom-resources';
+import { Construct } from 'constructs';
 
-- **プロトコル名**: x402
-- **中核技術**: HTTPステータスコード 402("Payment Required")の活用
-- **目的**: ソフトウェアが人間の介入なしに経済取引を自律的に行える「自動化された経済」を実現すること
-- **主な焦点**: API、アプリ、AIエージェントが、利用したリソースに対してリアルタイムで、極めて低額の支払い(マイクロペイメント)を行えるようにすること
+export interface AgentCoreMemoryStackProps extends cdk.StackProps {
+  executionRoleArn: string;
+}
 
-### 🛠️ x402の機能と特徴
+export class AgentCoreMemoryStack extends cdk.Stack {
+  public readonly memoryId: string;
 
-x402は、従来の決済システムが抱える課題(複雑なAPIキー、高い手数料、遅延など)を解決し、AI時代の経済活動に最適化されています。
+  constructor(scope: Construct, id: string, props: AgentCoreMemoryStackProps) {
+    super(scope, id, props);
 
-#### 1. HTTPネイティブな決済フロー
+    // AgentCore Memory作成用Lambda関数
+    const memoryCreatorFunction = new lambda.Function(this, 'MemoryCreatorFunction', {
+      runtime: lambda.Runtime.PYTHON_3_11,
+      handler: 'index.handler',
+      code: lambda.Code.fromInline(`
+import boto3
+import json
+import logging
 
-- **HTTP 402の活用**: 長らく予約されて利用されていなかったHTTPステータスコード402を復活させ、既存のHTTP通信の中に自然な形で決済フローを差し込みます
-- **仕組み**: サービスへのリクエストが402で拒否された場合、レスポンスには支払い要求(どのデジタル資産で、いくら支払うか)が含まれており、クライアント(AIエージェントなど)はそれに応じた支払い署名を添付してリクエストを再送信します
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
-#### 2. マイクロペイメントとリアルタイム決済
+def handler(event, context):
+    try:
+        client = boto3.client('bedrock-agentcore')
+        
+        request_type = event['RequestType']
+        
+        if request_type == 'Create':
+            # Memory作成
+            response = client.create_memory(
+                name='AgentCoreMemory',
+                description='Memory for AgentCore agents',
+                memoryStrategies=[
+                    {
+                        'type': 'SEMANTIC',
+                        'name': 'SemanticMemoryStrategy',
+                        'description': 'Semantic memory for long-term storage',
+                        'namespaces': ['/agents/{agentId}/semantic']
+                    },
+                    {
+                        'type': 'SUMMARY',
+                        'name': 'SummaryMemoryStrategy', 
+                        'description': 'Summary memory for conversation summaries',
+                        'namespaces': ['/agents/{agentId}/summaries']
+                    }
+                ]
+            )
+            
+            memory_id = response['id']
+            logger.info(f"Created memory with ID: {memory_id}")
+            
+            return {
+                'Status': 'SUCCESS',
+                'PhysicalResourceId': memory_id,
+                'Data': {'MemoryId': memory_id}
+            }
+            
+        elif request_type == 'Delete':
+            memory_id = event['PhysicalResourceId']
+            try:
+                client.delete_memory(memoryId=memory_id)
+                logger.info(f"Deleted memory with ID: {memory_id}")
+            except Exception as e:
+                logger.warning(f"Failed to delete memory: {e}")
+            
+            return {
+                'Status': 'SUCCESS',
+                'PhysicalResourceId': memory_id
+            }
+            
+        else:  # Update
+            return {
+                'Status': 'SUCCESS',
+                'PhysicalResourceId': event['PhysicalResourceId']
+            }
+            
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        return {
+            'Status': 'FAILED',
+            'Reason': str(e),
+            'PhysicalResourceId': event.get('PhysicalResourceId', 'failed-to-create')
+        }
+      `),
+      timeout: cdk.Duration.minutes(5),
+    });
 
-- **超低額支払い**: 0.001ドル単位のような極めて少額の支払い(マイクロペイメント)も、経済的に実行可能です
-- **即時決済**: サービス提供と同時に支払いが確定する即時決済を実現し、取引の不確実性を排除します
-- **正確な計測**: API呼び出しや計算リソースの使用量をミリ秒単位で正確に測定し、使用量に基づいた公平な課金を実現します
+    // Lambda関数にAgentCore権限を付与
+    memoryCreatorFunction.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'bedrock-agentcore:CreateMemory',
+          'bedrock-agentcore:DeleteMemory',
+          'bedrock-agentcore:GetMemory',
+          'bedrock-agentcore:ListMemories',
+        ],
+        resources: ['*'],
+      })
+    );
 
-#### 3. AIエージェントの経済的自律性
+    // カスタムリソースでMemory作成
+    const memoryResource = new cr.AwsCustomResource(this, 'AgentCoreMemoryResource', {
+      onCreate: {
+        service: 'Lambda',
+        action: 'invoke',
+        parameters: {
+          FunctionName: memoryCreatorFunction.functionName,
+          Payload: JSON.stringify({
+            RequestType: 'Create',
+            ResourceProperties: {
+              ExecutionRoleArn: props.executionRoleArn,
+            },
+          }),
+        },
+        physicalResourceId: cr.PhysicalResourceId.fromResponse('Payload'),
+      },
+      onDelete: {
+        service: 'Lambda',
+        action: 'invoke',
+        parameters: {
+          FunctionName: memoryCreatorFunction.functionName,
+          Payload: JSON.stringify({
+            RequestType: 'Delete',
+          }),
+        },
+      },
+      policy: cr.AwsCustomResourcePolicy.fromSdkCalls({
+        resources: cr.AwsCustomResourcePolicy.ANY_RESOURCE,
+      }),
+    });
 
-- **経済的主体**: AIエージェントが、人間が設定したサブスクリプションやAPIキーに依存せず、自らの判断で経済取引を行えるようになります
-- **ツール連携**: Mastraなどで活用されるMCP(Model Context Protocol)のような標準的なツール連携を通じて、エージェントが自動的に支払い処理を実行できます
+    // Memory IDを取得
+    this.memoryId = memoryResource.getResponseField('Payload');
 
-#### 4. 開発・運用面での利点
+    // Parameter Storeに保存
+    new cdk.CfnOutput(this, 'MemoryIdOutput', {
+      value: this.memoryId,
+      description: 'AgentCore Memory ID',
+      exportName: 'AgentCoreMemoryId',
+    });
+  }
+}
+```
 
-- **シームレスな統合**: 既存のWebスタックへの統合が容易で、数行のミドルウェアコードや設定の追加で行えます
-- **APIキー不要**: 支払い署名がアクセス認証を兼ねるため、複雑なAPIキーの管理が不要になります
-- **自動スケーリング**: 使用量に応じて自動的にスケールする料金構造が容易になり、リソースの最適化が図れます
+AgentCore Gateway設定
+
+```ts
+// lib/agentcore-gateway-stack.ts
+import * as cdk from 'aws-cdk-lib';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import * as apigateway from 'aws-cdk-lib/aws-apigateway';
+import { Construct } from 'constructs';
+
+export interface AgentCoreGatewayStackProps extends cdk.StackProps {
+  executionRoleArn: string;
+}
+
+export class AgentCoreGatewayStack extends cdk.Stack {
+  public readonly gatewayId: string;
+
+  constructor(scope: Construct, id: string, props: AgentCoreGatewayStackProps) {
+    super(scope, id, props);
+
+    // x402決済用Lambda関数
+    const x402PaymentFunction = new lambda.Function(this, 'X402PaymentFunction', {
+      runtime: lambda.Runtime.NODEJS_18_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromInline(`
+const { BedrockAgentCoreClient } = require('@aws-sdk/client-bedrock-agentcore');
+
+exports.handler = async (event, context) => {
+    console.log('X402 Payment Function called:', JSON.stringify(event, null, 2));
+    
+    const { toolName, input } = event;
+    
+    try {
+        switch (toolName) {
+            case 'processPayment':
+                return await processPayment(input);
+            case 'checkBalance':
+                return await checkBalance(input);
+            case 'getTransactionHistory':
+                return await getTransactionHistory(input);
+            default:
+                throw new Error(\`Unknown tool: \${toolName}\`);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        throw error;
+    }
+};
+
+async function processPayment(input) {
+    const { amount, currency, recipient, memo } = input;
+    
+    // x402決済処理のシミュレーション
+    const transactionId = \`tx_\${Date.now()}_\${Math.random().toString(36).substr(2, 9)}\`;
+    
+    return {
+        success: true,
+        transactionId,
+        amount,
+        currency,
+        recipient,
+        memo,
+        timestamp: new Date().toISOString(),
+        status: 'completed'
+    };
+}
+
+async function checkBalance(input) {
+    const { walletAddress } = input;
+    
+    // 残高確認のシミュレーション
+    return {
+        walletAddress,
+        balance: '1000.50',
+        currency: 'USDC',
+        lastUpdated: new Date().toISOString()
+    };
+}
+
+async function getTransactionHistory(input) {
+    const { walletAddress, limit = 10 } = input;
+    
+    // 取引履歴のシミュレーション
+    const transactions = Array.from({ length: Math.min(limit, 5) }, (_, i) => ({
+        transactionId: \`tx_\${Date.now() - i * 1000}_\${Math.random().toString(36).substr(2, 9)}\`,
+        amount: (Math.random() * 100).toFixed(2),
+        currency: 'USDC',
+        type: Math.random() > 0.5 ? 'sent' : 'received',
+        timestamp: new Date(Date.now() - i * 86400000).toISOString(),
+        status: 'completed'
+    }));
+    
+    return {
+        walletAddress,
+        transactions,
+        total: transactions.length
+    };
+}
+      `),
+      timeout: cdk.Duration.minutes(1),
+    });
+
+    // Lambda関数に必要な権限を付与
+    x402PaymentFunction.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'bedrock-agentcore:*',
+          'logs:CreateLogGroup',
+          'logs:CreateLogStream',
+          'logs:PutLogEvents',
+        ],
+        resources: ['*'],
+      })
+    );
+
+    // Gateway作成用Lambda関数
+    const gatewayCreatorFunction = new lambda.Function(this, 'GatewayCreatorFunction', {
+      runtime: lambda.Runtime.PYTHON_3_11,
+      handler: 'index.handler',
+      code: lambda.Code.fromInline(`
+import boto3
+import json
+import logging
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+def handler(event, context):
+    try:
+        client = boto3.client('bedrock-agentcore')
+        
+        request_type = event['RequestType']
+        
+        if request_type == 'Create':
+            # Gateway作成
+            response = client.create_gateway(
+                name='X402PaymentGateway',
+                description='Gateway for x402 payment processing'
+            )
+            
+            gateway_id = response['id']
+            
+            # Lambda targetを追加
+            target_response = client.create_target(
+                gatewayId=gateway_id,
+                name='X402PaymentTarget',
+                targetConfiguration={
+                    'lambda': {
+                        'lambdaArn': event['ResourceProperties']['LambdaArn'],
+                        'toolSchema': {
+                            'inlinePayload': [
+                                {
+                                    'name': 'processPayment',
+                                    'description': 'Process a payment using x402 protocol',
+                                    'inputSchema': {
+                                        'type': 'object',
+                                        'properties': {
+                                            'amount': {'type': 'string', 'description': 'Payment amount'},
+                                            'currency': {'type': 'string', 'description': 'Currency (e.g., USDC)'},
+                                            'recipient': {'type': 'string', 'description': 'Recipient address'},
+                                            'memo': {'type': 'string', 'description': 'Payment memo'}
+                                        },
+                                        'required': ['amount', 'currency', 'recipient']
+                                    }
+                                },
+                                {
+                                    'name': 'checkBalance',
+                                    'description': 'Check wallet balance',
+                                    'inputSchema': {
+                                        'type': 'object',
+                                        'properties': {
+                                            'walletAddress': {'type': 'string', 'description': 'Wallet address'}
+                                        },
+                                        'required': ['walletAddress']
+                                    }
+                                },
+                                {
+                                    'name': 'getTransactionHistory',
+                                    'description': 'Get transaction history',
+                                    'inputSchema': {
+                                        'type': 'object',
+                                        'properties': {
+                                            'walletAddress': {'type': 'string', 'description': 'Wallet address'},
+                                            'limit': {'type': 'integer', 'description': 'Number of transactions to return'}
+                                        },
+                                        'required': ['walletAddress']
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            )
+            
+            logger.info(f"Created gateway with ID: {gateway_id}")
+            
+            return {
+                'Status': 'SUCCESS',
+                'PhysicalResourceId': gateway_id,
+                'Data': {'GatewayId': gateway_id}
+            }
+            
+        elif request_type == 'Delete':
+            gateway_id = event['PhysicalResourceId']
+            try:
+                client.delete_gateway(gatewayId=gateway_id)
+                logger.info(f"Deleted gateway with ID: {gateway_id}")
+            except Exception as e:
+                logger.warning(f"Failed to delete gateway: {e}")
+            
+            return {
+                'Status': 'SUCCESS',
+                'PhysicalResourceId': gateway_id
+            }
+            
+        else:  # Update
+            return {
+                'Status': 'SUCCESS',
+                'PhysicalResourceId': event['PhysicalResourceId']
+            }
+            
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        return {
+            'Status': 'FAILED',
+            'Reason': str(e),
+            'PhysicalResourceId': event.get('PhysicalResourceId', 'failed-to-create')
+        }
+      `),
+      timeout: cdk.Duration.minutes(5),
+    });
+
+    // Gateway作成Lambda関数に権限を付与
+    gatewayCreatorFunction.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'bedrock-agentcore:CreateGateway',
+          'bedrock-agentcore:DeleteGateway',
+          'bedrock-agentcore:CreateTarget',
+          'bedrock-agentcore:DeleteTarget',
+          'lambda:InvokeFunction',
+        ],
+        resources: ['*'],
+      })
+    );
+
+    // 出力
+    new cdk.CfnOutput(this, 'X402PaymentFunctionArnOutput', {
+      value: x402PaymentFunction.functionArn,
+      description: 'X402 Payment Lambda Function ARN',
+      exportName: 'X402PaymentFunctionArn',
+    });
+  }
+}
+```
+
+メインアプリケーション
+
+```ts
+// bin/agentcore-app.ts
+#!/usr/bin/env node
+import 'source-map-support/register';
+import * as cdk from 'aws-cdk-lib';
+import { AgentCoreInfrastructureStack } from '../lib/agentcore-infrastructure-stack';
+import { AgentCoreMemoryStack } from '../lib/agentcore-memory-stack';
+import { AgentCoreGatewayStack } from '../lib/agentcore-gateway-stack';
+
+const app = new cdk.App();
+
+// 基盤インフラストラクチャ
+const infraStack = new AgentCoreInfrastructureStack(app, 'AgentCoreInfrastructureStack', {
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: process.env.CDK_DEFAULT_REGION,
+  },
+});
+
+// Memory設定
+const memoryStack = new AgentCoreMemoryStack(app, 'AgentCoreMemoryStack', {
+  executionRoleArn: infraStack.agentCoreExecutionRole.roleArn,
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: process.env.CDK_DEFAULT_REGION,
+  },
+});
+
+// Gateway設定
+const gatewayStack = new AgentCoreGatewayStack(app, 'AgentCoreGatewayStack', {
+  executionRoleArn: infraStack.agentCoreExecutionRole.roleArn,
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: process.env.CDK_DEFAULT_REGION,
+  },
+});
+
+// 依存関係設定
+memoryStack.addDependency(infraStack);
+gatewayStack.addDependency(infraStack);
+```
 
 ### 💡 x402が実現する応用シナリオ
 
