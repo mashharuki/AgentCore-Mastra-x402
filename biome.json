@@ -17,7 +17,9 @@
       "**/out",
       "**/target",
       "**/public",
-      "**/docs"
+      "**/docs",
+      "**/.next",
+      "pkgs/mcp/bundle.js"
     ]
   },
   "formatter": {

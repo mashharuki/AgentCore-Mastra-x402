@@ -17,7 +17,7 @@ esbuild
       (acc, [file, data]) => {
         return acc + data.bytes;
       },
-      0
+      0,
     );
     console.log(`file size: ${(outputSize / 1024 / 1024).toFixed(2)} MB`);
   })
