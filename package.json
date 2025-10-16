@@ -4,7 +4,7 @@
   "private": true,
   "description": "",
   "main": "index.js",
- "scripts": {
+  "scripts": {
     "biome:format": "npx biome format --write .",
     "biome:check": "npx biome check --write .",
     "cdk": "pnpm --filter cdk",
