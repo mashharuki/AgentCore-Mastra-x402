@@ -10,7 +10,7 @@ import type { Construct } from "constructs";
  * 3. x402 MCP サーバー
  * 4. x402 に対応したコンテンツサーバー
  */
-export class CdkStack extends cdk.Stack {
+export class AgentCoreMastraX402Stack extends cdk.Stack {
   /**
    * コンストラクター
    * @param scope

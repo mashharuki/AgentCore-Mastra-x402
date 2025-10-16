@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import * as cdk from "aws-cdk-lib";
-import { CdkStack } from "../lib/cdk-stack";
+import { AgentCoreMastraX402Stack } from "../lib/cdk-stack";
 
 const app = new cdk.App();
-new CdkStack(app, "CdkStack", {});
+
+// AgentCoreMastraX402Stackスタックをインスタンス化
+new AgentCoreMastraX402Stack(app, "AgentCoreMastraX402Stack", {});
