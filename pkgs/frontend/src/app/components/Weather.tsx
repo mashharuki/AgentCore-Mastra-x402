@@ -1,12 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { getWeatherInfo } from "../actions";
+import { callx402Mcp } from "../actions";
 
 // Define the type for weather data
 interface WeatherData {
   text: string;
-  city: string;
+  steps?: number;
+  lastStepType?: string;
+  rawResult?: {
+    hasSteps: boolean;
+    stepsLength: number;
+    hasText: boolean;
+  };
+  error?: string;
 }
 
 export function Weather() {
@@ -18,8 +25,9 @@ export function Weather() {
     setLoading(true);
     try {
       const formData = new FormData(event.currentTarget);
-      const city = formData.get("city") as string;
-      const result = await getWeatherInfo(city);
+      const prompt = formData.get("prompt") as string;
+      // AI Agent越しにx402の機能を呼び出す
+      const result = await callx402Mcp(prompt);
       setWeatherData(result);
       console.log(result);
     } catch (error) {
@@ -35,8 +43,8 @@ export function Weather() {
       <form onSubmit={handleSubmit} className="mb-4">
         <div className="flex gap-2">
           <input
-            name="city"
-            placeholder="Enter city name"
+            name="prompt"
+            placeholder="Enter your prompt"
             className="px-3 py-2 border rounded flex-1"
             required
           />
@@ -45,16 +53,14 @@ export function Weather() {
             className="px-4 py-2 bg-blue-500 text-white rounded"
             disabled={loading}
           >
-            {loading ? "Loading..." : "Get Weather"}
+            {loading ? "Loading..." : "Call x402 MCP"}
           </button>
         </div>
       </form>
 
       {weatherData && (
         <div className="bg-gray-50 p-4 rounded-lg border">
-          <h3 className="font-medium text-lg mb-2 text-black">
-            Weather for {weatherData.city}
-          </h3>
+          <h3 className="font-medium text-lg mb-2 text-black">Reult:</h3>
           <p className="whitespace-pre-wrap text-gray-900">
             {weatherData.text}
           </p>
