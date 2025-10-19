@@ -61,7 +61,7 @@ app.use(
 // get weather report API
 app.get("/weather", async (c) => {
   // 任意の処理をここに入れる
-
+  console.log("Payment received, processing weather report request...");
   // ステーブルコインを支払った結果としてダミーの天気データを返す
   return c.json({
     report: {

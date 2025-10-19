@@ -35,7 +35,7 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
     super(scope, id, props);
 
     // Create VPC for Fargate service
-    const vpc = new ec2.Vpc(this, "X402Vpc", {
+    const vpc = new ec2.Vpc(this, "AgentCoreMastraX402Vpc", {
       maxAzs: 2,
       natGateways: 1,
     });
@@ -47,12 +47,12 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
     // Create ECR repository reference (assuming it already exists)
     const backendRepo = ecr.Repository.fromRepositoryName(
       this,
-      "BackendRepo",
+      "AgentCoreMastraX402BackendRepo",
       "x402-backend-api",
     );
 
     // Create ECS cluster
-    const cluster = new ecs.Cluster(this, "X402Cluster", {
+    const cluster = new ecs.Cluster(this, "AgentCoreMastraX402Cluster", {
       vpc,
       clusterName: "x402-cluster",
     });
@@ -61,7 +61,7 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
     const backendService =
       new ecsPatterns.ApplicationLoadBalancedFargateService(
         this,
-        "BackendService",
+        "AgentCoreMastraX402BackendService",
         {
           cluster,
           serviceName: "x402-backend-api",
@@ -81,11 +81,15 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
             },
             logDriver: ecs.LogDrivers.awsLogs({
               streamPrefix: "x402-backend",
-              logGroup: new logs.LogGroup(this, "BackendLogGroup", {
-                logGroupName: "/aws/ecs/x402-backend",
-                retention: logs.RetentionDays.ONE_WEEK,
-                removalPolicy: cdk.RemovalPolicy.DESTROY,
-              }),
+              logGroup: new logs.LogGroup(
+                this,
+                "AgentCoreMastraX402BackendLogGroup",
+                {
+                  logGroupName: "/aws/ecs/x402-backend",
+                  retention: logs.RetentionDays.ONE_WEEK,
+                  removalPolicy: cdk.RemovalPolicy.DESTROY,
+                },
+              ),
             }),
           },
           publicLoadBalancer: true,
@@ -111,7 +115,7 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
     // Create Lambda function for MCP server (force rebuild v3 - bundle.js fix)
     const mcpLambdaFunction = new lambda.Function(
       this,
-      "x402WalrusMCPServerFunction",
+      "AgentCoreMastraX402MCPServerFunction",
       {
         runtime: lambda.Runtime.NODEJS_22_X,
         code: lambda.Code.fromAsset(join(__dirname, "../../mcp"), {
@@ -282,17 +286,17 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
     // 成果物
     //　===========================================================================
 
-    new cdk.CfnOutput(this, "BackendApiUrl", {
+    new cdk.CfnOutput(this, "AgentCoreMastraX402BackendApiUrl", {
       value: `http://${backendService.loadBalancer.loadBalancerDnsName}`,
       description: "Backend API Load Balancer URL",
     });
 
-    new cdk.CfnOutput(this, "MCPServerUrl", {
+    new cdk.CfnOutput(this, "AgentCoreMastraX402MCPServerUrl", {
       value: mcpFunctionUrl.url,
       description: "MCP Server Function URL",
     });
 
-    new cdk.CfnOutput(this, "VpcId", {
+    new cdk.CfnOutput(this, "AgentCoreMastraX402VpcId", {
       value: vpc.vpcId,
       description: "VPC ID",
     });

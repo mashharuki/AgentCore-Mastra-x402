@@ -6,15 +6,28 @@ import type {
   APIGatewayProxyResult,
   Context,
 } from "aws-lambda";
+import axios from "axios";
 import express from "express";
+import type { Hex } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
+import { withPaymentInterceptor } from "x402-axios";
 
 // Environment variables
 const PORT = Number.parseInt(process.env.PORT || "8080", 10);
 const RESOURCE_SERVER_URL = process.env.RESOURCE_SERVER_URL as string;
 
+const privateKey = process.env.PRIVATE_KEY as Hex;
+const baseURL = process.env.RESOURCE_SERVER_URL as string;
+const endpointPath = process.env.ENDPOINT_PATH as string;
+
 console.log("Lambda function started!");
 console.log("Using RESOURCE_SERVER_URL:", RESOURCE_SERVER_URL);
 console.log("Environment variables:", JSON.stringify(process.env, null, 2));
+
+// ステーブルコインを支払うウォレットインスタンスを生成
+const account = privateKeyToAccount(privateKey);
+// x402を適用させるベースエンドポイントを指定してクライアントインスタンスを生成
+const client = withPaymentInterceptor(axios.create({ baseURL }), account);
 
 // Create an MCP server
 const server = new McpServer({
@@ -37,6 +50,18 @@ app.use((req, res, next) => {
 /**
  * get Weather date tool
  */
+server.tool(
+  "get-data-from-resource-server",
+  "Get data from the resource server (in this example, the weather)",
+  async () => {
+    // 環境変数で渡されたエンドポイントを指定してAPIを実行する
+    // ここでx402の支払い処理が自動的に行われる
+    const res = await client.get(endpointPath);
+    return {
+      content: [{ type: "text", text: JSON.stringify(res.data) }],
+    };
+  },
+);
 
 // Create HTTP transport
 const transport = new StreamableHTTPServerTransport({
@@ -106,9 +131,9 @@ const ensureServerConnection = async () => {
 
 /**
  * Lambda handler メソッド
- * @param event イベント
- * @param context コンテキスト
- * @returns
+ * @param event APIGatewayProxyEvent
+ * @param context Context
+ * @returns APIGatewayProxyResult
  */
 export const handler = async (
   event: APIGatewayProxyEvent,
