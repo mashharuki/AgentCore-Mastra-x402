@@ -48,15 +48,14 @@ export function Weather() {
             <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 animate-pulse" />
           </span>
           <span className="text-sm font-medium text-emerald-200">
-            Powered by Model Context Protocol
+            Powered by AWS & Mastra & x402
           </span>
         </div>
         <h2 className="text-4xl sm:text-5xl font-bold text-white tracking-tight animate-scale-in">
-          AI Agent Resource Server
+          Bedrock x402 AI Agent
         </h2>
         <p className="text-lg text-gray-400 max-w-2xl mx-auto animate-fadeIn animation-delay-200">
-          Amazon Bedrock と Google Gemini
-          の力で、リアルタイムにリソースサーバーからデータを取得
+          x402でシームレスなステーブルコイン決済を行うAIエージェント
         </p>
       </div>
 
