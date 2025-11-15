@@ -1,8 +1,16 @@
-# Mastra + NextJS + x402 MCP Integration
+# 🚀 x402 MCP AI Agent - AgentCore Mastra
 
 ## Overview
 
-This Next.js application demonstrates AI agent integration with x402 MCP (Model Context Protocol) server for retrieving weather information from a resource server.
+A cutting-edge Next.js application showcasing AI agent integration with x402 MCP (Model Context Protocol) server for retrieving real-time data from resource servers. Built for JAWS UG AI Builders Day demonstration.
+
+### ✨ Key Features
+
+- 🤖 **Dual AI Model Support**: Switch between Amazon Bedrock Nova Lite and Google Gemini 2.0 Flash
+- 🔗 **MCP Integration**: Seamless AI-to-server communication via Model Context Protocol  
+- 🎨 **Modern UI/UX**: Glassmorphism design with smooth animations and transitions
+- 📱 **PWA Ready**: Progressive Web App with offline capabilities
+- ⚡ **Real-time Data**: Instant resource server data retrieval through AI agents
 
 ## Setup
 

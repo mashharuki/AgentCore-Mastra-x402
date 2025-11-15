@@ -1,11 +1,11 @@
 {
-  "name": "My Next.js PWA",
-  "short_name": "Next PWA",
-  "description": "My Progressive Web Application built with Next.js",
+  "name": "x402 MCP AI Agent - AgentCore Mastra",
+  "short_name": "x402 AI Agent",
+  "description": "AI-powered resource server integration with Amazon Bedrock and Google Gemini via Model Context Protocol. Demo for JAWS UG AI Builders Day.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#000000",
+  "background_color": "#0F172A",
+  "theme_color": "#7C3AED",
   "orientation": "portrait-primary",
   "icons": [
     {
