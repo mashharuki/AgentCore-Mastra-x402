@@ -56,9 +56,23 @@ Amazon Bedrock AgentCore Mastra x402でつくる次世代金融AI Agentのサン
 
 AWS Systems Manager Parameter Storeを使用して実行時の設定を取得:
 
+**1. MCP Server URL**
 - **パラメータ名**: `/agentcore/mastra/mcp-server-url`
 - **値**: MCP Server Function URL (デプロイ時に自動設定)
 - **用途**: AgentCore RuntimeコンテナがMCPサーバーと通信するためのURL
+
+**2. Google Gemini API Key**
+- **パラメータ名**: `/agentcore/mastra/gemini-api-key`
+- **値**: Google Generative AI API Key (手動設定が必要)
+- **用途**: Geminiモデルを使用する際の認証
+- **設定方法**:
+  ```bash
+  aws ssm put-parameter \
+    --name /agentcore/mastra/gemini-api-key \
+    --value "YOUR_GOOGLE_API_KEY" \
+    --type SecureString \
+    --region ap-northeast-1
+  ```
 
 #### Frontend (Next.js)
 
@@ -182,7 +196,20 @@ pnpm mcp build
 pnpm cdk run deploy 'AgentCoreMastraX402Stack'
 ```
 
-# CDKスタック更新
+#### 2. SSM パラメータストアへの環境変数追加設定
+
+以下の値について、パラメータストアに環境変数を設定してください。
+
+- `MCP_SERVER_URL`
+- `GOOGLE_GENERATIVE_AI_API_KEY`
+
+### デプロイ後にAmazon Bedrock AgentCore Runtimeでテストする際のテストデータ
+
+```json
+{
+  "prompt": "東京"
+}
+```
 
 ### AWSリソースを削除
 

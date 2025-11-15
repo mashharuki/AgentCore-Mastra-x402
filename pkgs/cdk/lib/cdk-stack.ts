@@ -241,6 +241,25 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
       },
     );
 
+    // Store Google Gemini API Key in SSM Parameter Store (SecureString)
+    // Note: This should be set manually or via CDK context/secrets
+    // For now, create a placeholder that needs to be updated manually
+    const geminiApiKeyParameter = new ssm.StringParameter(
+      this,
+      "GeminiApiKeyParameter",
+      {
+        parameterName: "/agentcore/mastra/gemini-api-key",
+        stringValue:
+          process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+          "PLACEHOLDER_UPDATE_MANUALLY",
+        description:
+          "Google Gemini API Key for Mastra Agent (SecureString recommended)",
+        tier: ssm.ParameterTier.STANDARD,
+        // Note: Using STANDARD for now. For production, consider using SecureString:
+        // type: ssm.ParameterType.SECURE_STRING,
+      },
+    );
+
     // ===========================================================================
     // Amazon Bedrock AgentCore Runtime (正式なCfnRuntimeリソース)
     //　===========================================================================
@@ -376,16 +395,29 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
     );
 
     // SSM Parameter Store read permissions for runtime configuration
+    // Grant explicit read access to configuration parameters
     agentCoreRole.addToPolicy(
       new iam.PolicyStatement({
         sid: "ReadSSMParameters",
         effect: iam.Effect.ALLOW,
-        actions: ["ssm:GetParameter", "ssm:GetParameters"],
+        actions: [
+          "ssm:GetParameter",
+          "ssm:GetParameters",
+          "ssm:GetParametersByPath",
+        ],
         resources: [
+          // Specific parameters
+          mcpServerUrlParameter.parameterArn,
+          geminiApiKeyParameter.parameterArn,
+          // Wildcard for all parameters under this path
           `arn:aws:ssm:${region}:${accountId}:parameter/agentcore/mastra/*`,
         ],
       }),
     );
+
+    // Also grant read access via the Parameter resource directly
+    mcpServerUrlParameter.grantRead(agentCoreRole);
+    geminiApiKeyParameter.grantRead(agentCoreRole);
 
     // Create AgentCore Runtime
     // Note: CfnRuntime does not support direct environment variable configuration
@@ -421,7 +453,10 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
       },
     );
 
+    // Ensure proper dependency chain: Parameters -> Role -> Runtime
     agentCoreRuntime.node.addDependency(agentCoreRole);
+    agentCoreRuntime.node.addDependency(mcpServerUrlParameter);
+    agentCoreRuntime.node.addDependency(geminiApiKeyParameter);
 
     // Create AgentCore Runtime Endpoint
     const agentCoreEndpoint = new agentcore.CfnRuntimeEndpoint(
@@ -532,9 +567,25 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
         "SSM Parameter Store name for MCP Server URL (used by AgentCore Runtime)",
     });
 
+    new cdk.CfnOutput(this, "AgentCoreMastraX402MCPServerUrlParameterArn", {
+      value: mcpServerUrlParameter.parameterArn,
+      description: "SSM Parameter ARN (for IAM permissions verification)",
+    });
+
+    new cdk.CfnOutput(this, "AgentCoreMastraX402GeminiApiKeyParameter", {
+      value: geminiApiKeyParameter.parameterName,
+      description:
+        "SSM Parameter Store name for Gemini API Key (update manually if needed)",
+    });
+
     new cdk.CfnOutput(this, "AgentCoreMastraRuntimeArn", {
       value: agentCoreRuntime.attrAgentRuntimeArn,
       description: "Amazon Bedrock AgentCore Runtime ARN",
+    });
+
+    new cdk.CfnOutput(this, "AgentCoreMastraRuntimeRegion", {
+      value: region,
+      description: "AWS Region for runtime resources",
     });
 
     new cdk.CfnOutput(this, "AgentCoreMastraRuntimeId", {

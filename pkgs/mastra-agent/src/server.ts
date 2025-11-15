@@ -11,44 +11,131 @@ const PORT = process.env.PORT || 8080;
 const HOST = "0.0.0.0";
 
 /**
- * Load MCP_SERVER_URL from SSM Parameter Store if running in AWS
- * Falls back to environment variable for local development
+ * Load configuration from SSM Parameter Store if running in AWS
+ * Falls back to environment variables for local development
  */
-async function loadMcpServerUrl(): Promise<string | undefined> {
+async function loadConfigFromSSM(): Promise<void> {
   // Check if we're running in AWS (AWS_REGION is set in AWS environments)
-  const isAws = !!process.env.AWS_REGION;
+  const region = process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION;
+  const isAws = !!region;
 
-  if (isAws && !process.env.MCP_SERVER_URL) {
+  console.log(`Environment check - AWS_REGION: ${region}, isAws: ${isAws}`);
+
+  if (!isAws) {
+    console.log("Not running in AWS - using environment variables");
+    return;
+  }
+
+  const ssmClient = new SSMClient({ region });
+
+  // Load MCP_SERVER_URL
+  if (!process.env.MCP_SERVER_URL) {
+    const mcpServerUrlParam = "/agentcore/mastra/mcp-server-url";
     try {
       console.log(
-        "Running in AWS - attempting to load MCP_SERVER_URL from SSM Parameter Store",
+        `Loading MCP_SERVER_URL from SSM Parameter Store: ${mcpServerUrlParam}`,
       );
-      const ssmClient = new SSMClient({ region: process.env.AWS_REGION });
-      const command = new GetParameterCommand({
-        Name: "/agentcore/mastra/mcp-server-url",
-        WithDecryption: false,
-      });
-      const response = await ssmClient.send(command);
-      const mcpServerUrl = response.Parameter?.Value;
 
+      const response = await ssmClient.send(
+        new GetParameterCommand({
+          Name: mcpServerUrlParam,
+          WithDecryption: false,
+        }),
+      );
+
+      const mcpServerUrl = response.Parameter?.Value;
       if (mcpServerUrl) {
-        console.log("Successfully loaded MCP_SERVER_URL from SSM");
+        console.log(
+          `✅ Successfully loaded MCP_SERVER_URL from SSM: ${mcpServerUrl}`,
+        );
         process.env.MCP_SERVER_URL = mcpServerUrl;
-        return mcpServerUrl;
+      } else {
+        console.warn("⚠️  MCP_SERVER_URL parameter returned empty value");
       }
     } catch (error) {
-      console.warn("Failed to load MCP_SERVER_URL from SSM:", error);
-      console.warn("Falling back to environment variable");
+      console.error("Failed to load MCP_SERVER_URL from SSM:");
+      console.error(
+        `  Error: ${(error as Error).name} - ${(error as Error).message}`,
+      );
+      console.error(`  Parameter: ${mcpServerUrlParam}`);
+      console.error(`  Region: ${region}`);
+      console.error("  Falling back to environment variable");
     }
   }
 
-  return process.env.MCP_SERVER_URL;
+  // Load GOOGLE_GENERATIVE_AI_API_KEY
+  if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+    const geminiApiKeyParam = "/agentcore/mastra/gemini-api-key";
+    try {
+      console.log(
+        `Loading GOOGLE_GENERATIVE_AI_API_KEY from SSM Parameter Store: ${geminiApiKeyParam}`,
+      );
+
+      const response = await ssmClient.send(
+        new GetParameterCommand({
+          Name: geminiApiKeyParam,
+          WithDecryption: true, // Decrypt SecureString
+        }),
+      );
+
+      const apiKey = response.Parameter?.Value;
+      if (apiKey) {
+        console.log(
+          "✅ Successfully loaded GOOGLE_GENERATIVE_AI_API_KEY from SSM",
+        );
+        process.env.GOOGLE_GENERATIVE_AI_API_KEY = apiKey;
+      } else {
+        console.warn(
+          "⚠️  GOOGLE_GENERATIVE_AI_API_KEY parameter returned empty value",
+        );
+      }
+    } catch (error) {
+      console.error("Failed to load GOOGLE_GENERATIVE_AI_API_KEY from SSM:");
+      console.error(
+        `  Error: ${(error as Error).name} - ${(error as Error).message}`,
+      );
+      console.error(`  Parameter: ${geminiApiKeyParam}`);
+      console.error(`  Region: ${region}`);
+
+      if (
+        (error as Error).name === "ParameterNotFound" ||
+        (error as Error).message?.includes("ParameterNotFound")
+      ) {
+        console.error("  💡 To create this parameter, run:");
+        console.error(
+          `     aws ssm put-parameter --name ${geminiApiKeyParam} --value "YOUR_API_KEY" --type SecureString --region ${region}`,
+        );
+      }
+
+      console.error("  Falling back to environment variable");
+    }
+  }
+
+  // Final validation
+  if (!process.env.MCP_SERVER_URL) {
+    console.warn(
+      "⚠️  WARNING: MCP_SERVER_URL is not set. Agent functionality will be limited.",
+    );
+  }
+
+  if (
+    !process.env.GOOGLE_GENERATIVE_AI_API_KEY &&
+    process.env.USE_GEMINI === "true"
+  ) {
+    console.warn(
+      "⚠️  WARNING: GOOGLE_GENERATIVE_AI_API_KEY is not set but USE_GEMINI=true. Gemini model will fail.",
+    );
+  }
 }
 
 // Log environment variables for debugging
 console.log("Environment variables loaded:");
 console.log("- PORT:", PORT);
 console.log("- USE_GEMINI:", process.env.USE_GEMINI);
+console.log(
+  "- GOOGLE_GENERATIVE_AI_API_KEY:",
+  process.env.GOOGLE_GENERATIVE_AI_API_KEY ? "set (hidden)" : "not set",
+);
 console.log("- RESOURCE_SERVER_URL:", process.env.RESOURCE_SERVER_URL);
 console.log("- ENDPOINT_PATH:", process.env.ENDPOINT_PATH);
 console.log("- AWS_REGION:", process.env.AWS_REGION);
@@ -154,7 +241,7 @@ app.post("/invocations", async (req: Request, res: Response) => {
         const chunks = text.split(" ");
 
         for (const chunk of chunks) {
-          res.write(`data: ${JSON.stringify({ chunk: chunk + " " })}\n\n`);
+          res.write(`data: ${JSON.stringify({ chunk: `${chunk} ` })}\n\n`);
         }
 
         res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
@@ -236,11 +323,16 @@ app.use(
  * Start server
  */
 async function startServer() {
-  // Load MCP_SERVER_URL from SSM if in AWS environment
-  await loadMcpServerUrl();
+  // Load configuration from SSM if in AWS environment
+  await loadConfigFromSSM();
 
   console.log("Configuration loaded:");
   console.log("- MCP_SERVER_URL:", process.env.MCP_SERVER_URL || "not set");
+  console.log(
+    "- GOOGLE_GENERATIVE_AI_API_KEY:",
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY ? "set (hidden)" : "not set",
+  );
+  console.log("- USE_GEMINI:", process.env.USE_GEMINI);
 
   // Initialize agent before starting server
   await initializeAgent();
