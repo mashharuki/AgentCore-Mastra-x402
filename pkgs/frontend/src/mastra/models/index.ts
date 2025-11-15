@@ -10,6 +10,4 @@ const bedrock = createAmazonBedrock({
   region: "ap-northeast-1",
 });
 // Use Claude 3.5 Sonnet v2 - stable and available in ap-northeast-1
-export const bedrockModel = bedrock(
-  "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
-);
+export const bedrockModel = bedrock("us.anthropic/claude-3-5-sonnet-v2");

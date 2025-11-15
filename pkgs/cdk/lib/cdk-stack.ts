@@ -131,102 +131,44 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
                     `Building MCP Lambda from: ${sourceDir} to: ${outputDir}`,
                   );
 
-                  // Copy necessary files (not node_modules)
-                  const filesToCopy = [
-                    "src",
-                    "package.json",
-                    "tsconfig.json",
-                    "esbuild.js",
-                    "bundle.js",
-                    "run.sh",
-                  ];
+                  // Check if bundle.js exists in source directory
+                  const sourceBundlePath = join(sourceDir, "bundle.js");
+                  if (!fs.existsSync(sourceBundlePath)) {
+                    console.error(
+                      "bundle.js not found in source directory. Please run 'pnpm mcp build' first.",
+                    );
+                    throw new Error(
+                      "bundle.js not found. Run 'pnpm mcp build' before deploying.",
+                    );
+                  }
+
+                  // Copy only necessary files for Lambda deployment
+                  const filesToCopy = ["bundle.js", "run.sh"];
 
                   for (const file of filesToCopy) {
                     const srcPath = join(sourceDir, file);
                     const destPath = join(outputDir, file);
                     if (fs.existsSync(srcPath)) {
-                      execSync(`cp -r ${srcPath} ${destPath}`, {
+                      console.log(`Copying: ${file}`);
+                      execSync(`cp ${srcPath} ${destPath}`, {
                         stdio: "inherit",
                       });
-                    }
-                  }
-
-                  // Install dependencies
-                  console.log("Installing dependencies...");
-                  try {
-                    execSync("npm install --no-package-lock --no-save", {
-                      cwd: outputDir,
-                      stdio: "inherit",
-                    });
-                  } catch (error) {
-                    console.warn("npm install failed, trying with --force");
-                    execSync(
-                      "npm install --no-package-lock --no-save --force",
-                      {
-                        cwd: outputDir,
-                        stdio: "inherit",
-                      },
-                    );
-                  }
-
-                  // Build the project (tsc + esbuild)
-                  console.log("Building project...");
-                  execSync("npm run build", {
-                    cwd: outputDir,
-                    stdio: "inherit",
-                  });
-
-                  // Verify bundle.js exists before cleanup
-                  const bundlePathBeforeCleanup = join(outputDir, "bundle.js");
-                  console.log(
-                    `Checking for bundle.js before cleanup: ${bundlePathBeforeCleanup}`,
-                  );
-                  if (!fs.existsSync(bundlePathBeforeCleanup)) {
-                    console.error("bundle.js was not created by build process");
-                    // List all files to debug
-                    execSync(`find ${outputDir} -name "*.js" -type f`, {
-                      stdio: "inherit",
-                    });
-                    throw new Error(
-                      "bundle.js was not created by build process",
-                    );
-                  }
-
-                  // Clean up files not needed in Lambda (but keep bundle.js and run.sh)
-                  console.log("Cleaning up files...");
-                  const filesToRemove = [
-                    "package.json",
-                    "node_modules",
-                    "tsconfig.json",
-                    "src",
-                    "esbuild.js",
-                    "dist", // distフォルダも削除（bundle.jsがあるので不要）
-                  ];
-
-                  for (const file of filesToRemove) {
-                    const filePath = join(outputDir, file);
-                    if (fs.existsSync(filePath)) {
-                      console.log(`Removing: ${filePath}`);
-                      execSync(`rm -rf ${filePath}`, { stdio: "inherit" });
+                    } else {
+                      throw new Error(`Required file not found: ${file}`);
                     }
                   }
 
                   // Make run.sh executable
                   const runShPath = join(outputDir, "run.sh");
-                  if (fs.existsSync(runShPath)) {
-                    execSync(`chmod +x ${runShPath}`, {
-                      stdio: "inherit",
-                    });
-                  }
+                  execSync(`chmod +x ${runShPath}`, {
+                    stdio: "inherit",
+                  });
 
-                  // Verify bundle.js still exists after cleanup
+                  // Verify bundle.js exists
                   const bundlePath = join(outputDir, "bundle.js");
                   if (!fs.existsSync(bundlePath)) {
-                    throw new Error("bundle.js was removed during cleanup");
+                    throw new Error("bundle.js was not copied successfully");
                   }
-                  console.log(
-                    `Bundle file exists after cleanup: ${bundlePath}`,
-                  );
 
                   // Get bundle.js file size
                   const bundleStats = fs.statSync(bundlePath);
