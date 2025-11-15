@@ -14,7 +14,7 @@ export const createx402MCPClient = () => {
       // リモートの場合
       x402: {
         // sse: true,
-        url: new URL(`${process.env.MCP_SERVER_URL}/mcp`),
+        url: new URL(`${process.env.MCP_SERVER_URL}mcp`),
         // @ts-expect-error server is not a function
         log: new ConsoleLogger(),
       },
