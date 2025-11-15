@@ -463,7 +463,6 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
               PORT: "3000",
               NODE_ENV: "production",
               // Connect to AgentCore Runtime endpoint
-              // Note: AgentCore endpoint URL format is: https://<endpoint-id>.agentcore.<region>.amazonaws.com
               AGENTCORE_RUNTIME_ARN: agentCoreRuntime.attrAgentRuntimeArn,
               AGENTCORE_ENDPOINT_NAME: agentCoreEndpoint.name,
             },
