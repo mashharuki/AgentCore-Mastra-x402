@@ -38,14 +38,22 @@ reviews:
   # ラベル提案を有効化
   suggested_labels: true
   labeling_instructions:
-    - "bug: バグ修正"
-    - "feature: 新機能追加"
-    - "refactor: リファクタリング"
-    - "docs: ドキュメント更新"
-    - "test: テスト追加・修正"
-    - "infra: インフラ・CDK変更"
-    - "security: セキュリティ対応"
-    - "performance: パフォーマンス改善"
+    - label: "bug"
+      instruction: "バグ修正"
+    - label: "feature"
+      instruction: "新機能追加"
+    - label: "refactor"
+      instruction: "リファクタリング"
+    - label: "docs"
+      instruction: "ドキュメント更新"
+    - label: "test"
+      instruction: "テスト追加・修正"
+    - label: "infra"
+      instruction: "インフラ・CDK変更"
+    - label: "security"
+      instruction: "セキュリティ対応"
+    - label: "performance"
+      instruction: "パフォーマンス改善"
   auto_apply_labels: true
 
   suggested_reviewers: true
