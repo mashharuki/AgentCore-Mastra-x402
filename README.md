@@ -10,7 +10,14 @@ Amazon Bedrock AgentCore Mastra x402でつくる次世代金融AI Agentのサン
 │  │  Mastra AI Agent (:8080)               │ │
 │  │  - /ping (ヘルスチェック)              │ │
 │  │  - /invocations (AI処理)               │ │
+│  │  - SSM Parameter Storeから設定を取得   │ │
 │  └────────────────────────────────────────┘ │
+└─────────────────────────────────────────────┘
+              │
+              ▼
+┌─────────────────────────────────────────────┐
+│ AWS Systems Manager Parameter Store        │
+│  - /agentcore/mastra/mcp-server-url        │
 └─────────────────────────────────────────────┘
               │
               ▼
@@ -42,6 +49,14 @@ Amazon Bedrock AgentCore Mastra x402でつくる次世代金融AI Agentのサン
 │  └────────────────────────────────────────┘ │
 └─────────────────────────────────────────────┘
 ```
+
+### 設定管理
+
+Mastra AgentはAWS Systems Manager Parameter Storeを使用して実行時の設定を取得します:
+
+- **パラメータ名**: `/agentcore/mastra/mcp-server-url`
+- **値**: MCP Server Function URL (デプロイ時に自動設定)
+- **用途**: AgentCore RuntimeコンテナがMCPサーバーと通信するためのURL
 
 ## プロジェクト構成
 
@@ -148,30 +163,7 @@ pnpm mcp build
 pnpm cdk run deploy 'AgentCoreMastraX402Stack'
 ```
 
-#### 2. Mastra AIエージェントをECR/AgentCore Runtimeにデプロイ
-
-```bash
-cd pkgs/mastra-agent
-
-# Dockerイメージをビルド（ARM64）
-docker buildx build --platform linux/arm64 \
-  -t <account-id>.dkr.ecr.<region>.amazonaws.com/agentcore-mastra-agent:latest \
-  --push .
-
-# AgentCore Runtimeにデプロイ（CDKスタック更新）
-```
-
-#### 3. フロントエンドをECS Fargateにデプロイ
-
-```bash
-cd pkgs/frontend
-
-# Dockerイメージをビルド
-docker build -t <account-id>.dkr.ecr.<region>.amazonaws.com/agentcore-frontend:latest .
-docker push <account-id>.dkr.ecr.<region>.amazonaws.com/agentcore-frontend:latest
-
 # CDKスタック更新
-```
 
 ### AWSリソースを削除
 

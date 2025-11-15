@@ -70,16 +70,14 @@ USER agentuser
 # Expose port 8080 as required by AgentCore Runtime
 EXPOSE 8080
 
-# Build arguments from CDK
-ARG MCP_SERVER_URL=""
 # Set AgentCore Runtime required environment variables
 ENV PORT=8080
 ENV HOST=0.0.0.0
 ENV NODE_ENV=production
 # Use Bedrock models in production (not Gemini)
 ENV USE_GEMINI=true
-# Set runtime configuration from build args
-ENV MCP_SERVER_URL=${MCP_SERVER_URL}
+# MCP_SERVER_URL will be set at runtime through container environment variables
+# or injected through a configuration mechanism
 
 # Health check for /ping endpoint
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \

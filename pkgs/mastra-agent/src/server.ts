@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 // Load environment variables from .env file
 dotenv.config();
 
+import { GetParameterCommand, SSMClient } from "@aws-sdk/client-ssm";
 import express, { type Request, type Response } from "express";
 import { createx402Agent } from "./mastra/agents";
 
@@ -9,12 +10,48 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 const HOST = "0.0.0.0";
 
+/**
+ * Load MCP_SERVER_URL from SSM Parameter Store if running in AWS
+ * Falls back to environment variable for local development
+ */
+async function loadMcpServerUrl(): Promise<string | undefined> {
+  // Check if we're running in AWS (AWS_REGION is set in AWS environments)
+  const isAws = !!process.env.AWS_REGION;
+
+  if (isAws && !process.env.MCP_SERVER_URL) {
+    try {
+      console.log(
+        "Running in AWS - attempting to load MCP_SERVER_URL from SSM Parameter Store",
+      );
+      const ssmClient = new SSMClient({ region: process.env.AWS_REGION });
+      const command = new GetParameterCommand({
+        Name: "/agentcore/mastra/mcp-server-url",
+        WithDecryption: false,
+      });
+      const response = await ssmClient.send(command);
+      const mcpServerUrl = response.Parameter?.Value;
+
+      if (mcpServerUrl) {
+        console.log("Successfully loaded MCP_SERVER_URL from SSM");
+        process.env.MCP_SERVER_URL = mcpServerUrl;
+        return mcpServerUrl;
+      }
+    } catch (error) {
+      console.warn("Failed to load MCP_SERVER_URL from SSM:", error);
+      console.warn("Falling back to environment variable");
+    }
+  }
+
+  return process.env.MCP_SERVER_URL;
+}
+
 // Log environment variables for debugging
 console.log("Environment variables loaded:");
 console.log("- PORT:", PORT);
 console.log("- USE_GEMINI:", process.env.USE_GEMINI);
 console.log("- RESOURCE_SERVER_URL:", process.env.RESOURCE_SERVER_URL);
 console.log("- ENDPOINT_PATH:", process.env.ENDPOINT_PATH);
+console.log("- AWS_REGION:", process.env.AWS_REGION);
 
 // JSON parsing middleware
 app.use(express.json({ limit: "100mb" }));
@@ -199,6 +236,12 @@ app.use(
  * Start server
  */
 async function startServer() {
+  // Load MCP_SERVER_URL from SSM if in AWS environment
+  await loadMcpServerUrl();
+
+  console.log("Configuration loaded:");
+  console.log("- MCP_SERVER_URL:", process.env.MCP_SERVER_URL || "not set");
+
   // Initialize agent before starting server
   await initializeAgent();
 

@@ -8,6 +8,7 @@ import * as ecsPatterns from "aws-cdk-lib/aws-ecs-patterns";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as logs from "aws-cdk-lib/aws-logs";
+import * as ssm from "aws-cdk-lib/aws-ssm";
 import type { Construct } from "constructs";
 import * as dotenv from "dotenv";
 import { execSync } from "node:child_process";
@@ -227,11 +228,26 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
       },
     });
 
+    // Store MCP Server URL in SSM Parameter Store for runtime access
+    const mcpServerUrlParameter = new ssm.StringParameter(
+      this,
+      "McpServerUrlParameter",
+      {
+        parameterName: "/agentcore/mastra/mcp-server-url",
+        stringValue: mcpFunctionUrl.url,
+        description:
+          "MCP Server Function URL for Mastra Agent runtime configuration",
+        tier: ssm.ParameterTier.STANDARD,
+      },
+    );
+
     // ===========================================================================
     // Amazon Bedrock AgentCore Runtime (正式なCfnRuntimeリソース)
     //　===========================================================================
 
     // Build Docker image for AgentCore Runtime using ECR Assets
+    // Note: Environment variables like MCP_SERVER_URL must be set at runtime
+    // since they contain CDK tokens that are resolved during deployment
     const agentCoreDockerImage = new ecr_assets.DockerImageAsset(
       this,
       "AgentCoreDockerImage",
@@ -239,10 +255,6 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
         directory: join(__dirname, "../../mastra-agent"),
         file: "Dockerfile",
         platform: ecr_assets.Platform.LINUX_ARM64, // ARM64 for cost optimization
-        // 環境変数の割り当て
-        buildArgs: {
-          MCP_SERVER_URL: mcpFunctionUrl.url,
-        },
       },
     );
 
@@ -363,13 +375,34 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
       }),
     );
 
+    // SSM Parameter Store read permissions for runtime configuration
+    agentCoreRole.addToPolicy(
+      new iam.PolicyStatement({
+        sid: "ReadSSMParameters",
+        effect: iam.Effect.ALLOW,
+        actions: ["ssm:GetParameter", "ssm:GetParameters"],
+        resources: [
+          `arn:aws:ssm:${region}:${accountId}:parameter/agentcore/mastra/*`,
+        ],
+      }),
+    );
+
     // Create AgentCore Runtime
-    // Note: Environment variables must be baked into the Docker image
-    // The mastra-agent Dockerfile should set:
-    // - PORT=8080
+    // Note: CfnRuntime does not support direct environment variable configuration
+    // The mastra-agent must:
+    // 1. Use default/placeholder values for MCP_SERVER_URL during build
+    // 2. Allow runtime configuration through external mechanisms (e.g., Parameter Store, Secrets Manager)
+    // 3. Or implement a configuration service that reads from AWS resources
+    //
+    // For now, the MCP_SERVER_URL can be:
+    // - Hardcoded if known in advance
+    // - Retrieved from Parameter Store at container startup
+    // - Passed through a custom runtime configuration endpoint
+    //
+    // The Dockerfile sets:
+    // - PORT=8080 (required by AgentCore)
     // - NODE_ENV=production
-    // - USE_GEMINI=true (for Bedrock)
-    // - MCP_SERVER_URL (via runtime config)
+    // - USE_GEMINI=true (for Bedrock models)
     const agentCoreRuntime = new agentcore.CfnRuntime(
       this,
       "MastraAgentCoreRuntime",
@@ -475,6 +508,12 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
     new cdk.CfnOutput(this, "AgentCoreMastraX402MCPServerUrl", {
       value: mcpFunctionUrl.url,
       description: "MCP Server Function URL",
+    });
+
+    new cdk.CfnOutput(this, "AgentCoreMastraX402MCPServerUrlParameter", {
+      value: mcpServerUrlParameter.parameterName,
+      description:
+        "SSM Parameter Store name for MCP Server URL (used by AgentCore Runtime)",
     });
 
     new cdk.CfnOutput(this, "AgentCoreMastraRuntimeArn", {
