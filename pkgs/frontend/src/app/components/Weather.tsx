@@ -127,10 +127,10 @@ export function Weather() {
                     </div>
                     <div className="animate-slideInFromLeft">
                       <p className="text-sm font-medium text-white">
-                        Amazon Nova Lite
+                        Amazon Bedrock
                       </p>
                       <p className="text-xs text-yellow-400 animate-pulse">
-                        ⚠ Limited tool calling support
+                        ✓ Optimized for tool calling
                       </p>
                     </div>
                   </>

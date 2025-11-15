@@ -9,6 +9,7 @@ const bedrock = createAmazonBedrock({
   apiKey: process.env.AMAZON_BEDROCK_API_KEY || "",
   region: "ap-northeast-1",
 });
+// Use Claude 3.5 Sonnet v2 - stable and available in ap-northeast-1
 export const bedrockModel = bedrock(
-  "anthropic.claude-sonnet-4-5-20250929-v1:0",
+  "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
 );
