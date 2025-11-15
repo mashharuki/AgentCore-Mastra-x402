@@ -53,7 +53,9 @@ export const createx402Agent = async (useGemini: boolean) => {
     console.error("Failed to create x402 Agent:", error);
     // Fallback: エージェントをツールなしで作成
     const fallbackModel = useGemini ? gemini : bedrockModel;
-    console.log(`Fallback mode - using model: ${useGemini ? "Gemini" : "Amazon Nova Lite"}`);
+    console.log(
+      `Fallback mode - using model: ${useGemini ? "Gemini" : "Amazon Nova Lite"}`,
+    );
     return new Agent({
       name: "x402 Agent (fallback)",
       instructions: `
