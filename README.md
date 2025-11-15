@@ -114,6 +114,30 @@ docker tag mastra-agent:latest $AWS_ACCOUNT_ID.dkr.ecr.ap-northeast-1.amazonaws.
 docker push $AWS_ACCOUNT_ID.dkr.ecr.ap-northeast-1.amazonaws.com/agentcore-mastra-agent:latest
 ```
 
+#### 事前準備(フロントエンド用のECRリポジトリ作成とコンテナイメージプッシュ)
+
+ECRリポジトリの作成
+
+```bash
+aws ecr create-repository --repository-name agentcore-mastra-frontend
+```
+
+Dockerイメージのタグづけとプッシュ
+
+```bash
+export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+
+# ECRログイン
+aws ecr get-login-password --region ap-northeast-1 | \
+  docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.ap-northeast-1.amazonaws.com
+
+# タグ付け
+docker tag agentcore-frontend:latest $AWS_ACCOUNT_ID.dkr.ecr.ap-northeast-1.amazonaws.com/agentcore-mastra-frontend:latest
+
+# プッシュ
+docker push $AWS_ACCOUNT_ID.dkr.ecr.ap-northeast-1.amazonaws.com/agentcore-mastra-frontend:latest
+```
+
 #### 1. MCPサーバーとx402バックエンドをデプロイ
 
 ```bash
@@ -152,7 +176,7 @@ docker push <account-id>.dkr.ecr.<region>.amazonaws.com/agentcore-frontend:lates
 ### AWSリソースを削除
 
 ```bash
-pnpm cdk destroy 'AgentCoreMastraX402Stack' --force
+pnpm cdk run destroy 'AgentCoreMastraX402Stack' --force
 ```
 
 ## 各パッケージの詳細

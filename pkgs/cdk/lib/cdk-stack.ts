@@ -225,17 +225,155 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
     });
 
     // ===========================================================================
+    // Fargateで Mastra AI Agent (AgentCore Runtime互換) をデプロイ
+    //　===========================================================================
+
+    // Create ECR repository reference for Mastra Agent
+    const mastraAgentRepo = ecr.Repository.fromRepositoryName(
+      this,
+      "AgentCoreMastraAgentRepo",
+      "agentcore-mastra-agent",
+    );
+
+    // Create Fargate service for Mastra AI Agent
+    const mastraAgentService =
+      new ecsPatterns.ApplicationLoadBalancedFargateService(
+        this,
+        "AgentCoreMastraAgentService",
+        {
+          cluster,
+          serviceName: "mastra-agent",
+          cpu: 1024, // AgentCore Runtime requires sufficient CPU
+          memoryLimitMiB: 2048, // AgentCore Runtime requires sufficient memory
+          desiredCount: 1,
+          taskImageOptions: {
+            image: ecs.ContainerImage.fromEcrRepository(
+              mastraAgentRepo,
+              "latest",
+            ),
+            containerPort: 8080, // AgentCore Runtime port
+            environment: {
+              PORT: "8080",
+              NODE_ENV: "production",
+              USE_GEMINI: "true",
+              MCP_SERVER_URL: mcpFunctionUrl.url,
+            },
+            logDriver: ecs.LogDrivers.awsLogs({
+              streamPrefix: "mastra-agent",
+              logGroup: new logs.LogGroup(
+                this,
+                "AgentCoreMastraAgentLogGroup",
+                {
+                  logGroupName: "/aws/ecs/mastra-agent",
+                  retention: logs.RetentionDays.ONE_WEEK,
+                  removalPolicy: cdk.RemovalPolicy.DESTROY,
+                },
+              ),
+            }),
+          },
+          publicLoadBalancer: true,
+          assignPublicIp: true,
+          healthCheckGracePeriod: cdk.Duration.seconds(300),
+          // Use ARM64 architecture for cost optimization
+          runtimePlatform: {
+            cpuArchitecture: ecs.CpuArchitecture.ARM64,
+            operatingSystemFamily: ecs.OperatingSystemFamily.LINUX,
+          },
+        },
+      );
+
+    // Configure health check for Mastra Agent (AgentCore Runtime /ping endpoint)
+    mastraAgentService.targetGroup.configureHealthCheck({
+      path: "/ping",
+      healthyHttpCodes: "200",
+      interval: cdk.Duration.seconds(30),
+      timeout: cdk.Duration.seconds(5),
+      healthyThresholdCount: 2,
+      unhealthyThresholdCount: 5,
+    });
+
+    // ===========================================================================
+    // Fargateで Next.js Frontend をデプロイ
+    //　===========================================================================
+
+    // Create ECR repository reference for Frontend
+    const frontendRepo = ecr.Repository.fromRepositoryName(
+      this,
+      "AgentCoreMastraFrontendRepo",
+      "agentcore-mastra-frontend",
+    );
+
+    // Create Fargate service for Frontend
+    const frontendService =
+      new ecsPatterns.ApplicationLoadBalancedFargateService(
+        this,
+        "AgentCoreMastraFrontendService",
+        {
+          cluster,
+          serviceName: "agentcore-frontend",
+          cpu: 512,
+          memoryLimitMiB: 1024,
+          desiredCount: 1,
+          taskImageOptions: {
+            image: ecs.ContainerImage.fromEcrRepository(frontendRepo, "latest"),
+            containerPort: 3000,
+            environment: {
+              PORT: "3000",
+              NODE_ENV: "production",
+              // Connect to Mastra Agent service
+              AGENTCORE_RUNTIME_URL: `http://${mastraAgentService.loadBalancer.loadBalancerDnsName}`,
+            },
+            logDriver: ecs.LogDrivers.awsLogs({
+              streamPrefix: "agentcore-frontend",
+              logGroup: new logs.LogGroup(
+                this,
+                "AgentCoreMastraFrontendLogGroup",
+                {
+                  logGroupName: "/aws/ecs/agentcore-frontend",
+                  retention: logs.RetentionDays.ONE_WEEK,
+                  removalPolicy: cdk.RemovalPolicy.DESTROY,
+                },
+              ),
+            }),
+          },
+          publicLoadBalancer: true,
+          assignPublicIp: true,
+          healthCheckGracePeriod: cdk.Duration.seconds(300),
+        },
+      );
+
+    // Configure health check for Frontend
+    frontendService.targetGroup.configureHealthCheck({
+      path: "/api/health",
+      healthyHttpCodes: "200",
+      interval: cdk.Duration.seconds(30),
+      timeout: cdk.Duration.seconds(5),
+      healthyThresholdCount: 2,
+      unhealthyThresholdCount: 5,
+    });
+
+    // ===========================================================================
     // 成果物
     //　===========================================================================
 
     new cdk.CfnOutput(this, "AgentCoreMastraX402BackendApiUrl", {
       value: `http://${backendService.loadBalancer.loadBalancerDnsName}`,
-      description: "Backend API Load Balancer URL",
+      description: "x402 Backend API Load Balancer URL",
     });
 
     new cdk.CfnOutput(this, "AgentCoreMastraX402MCPServerUrl", {
       value: mcpFunctionUrl.url,
       description: "MCP Server Function URL",
+    });
+
+    new cdk.CfnOutput(this, "AgentCoreMastraAgentUrl", {
+      value: `http://${mastraAgentService.loadBalancer.loadBalancerDnsName}`,
+      description: "Mastra AI Agent (AgentCore Runtime) Load Balancer URL",
+    });
+
+    new cdk.CfnOutput(this, "AgentCoreMastraFrontendUrl", {
+      value: `http://${frontendService.loadBalancer.loadBalancerDnsName}`,
+      description: "Frontend Application Load Balancer URL",
     });
 
     new cdk.CfnOutput(this, "AgentCoreMastraX402VpcId", {
