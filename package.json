@@ -9,6 +9,7 @@
     "biome:check": "npx biome check --write .",
     "cdk": "pnpm --filter cdk",
     "frontend": "pnpm --filter frontend",
+    "mastra-agent": "pnpm --filter mastra-agent",
     "mcp": "pnpm --filter mcp",
     "x402server": "pnpm --filter x402server"
   },

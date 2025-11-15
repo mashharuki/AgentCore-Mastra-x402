@@ -1,34 +1,140 @@
 # AgentCore-Mastra-x402
 Amazon Bedrock AgentCore Mastra x402でつくる次世代金融AI Agentのサンプル実装です。
 
+## アーキテクチャ
+
+```
+┌─────────────────────────────────────────────┐
+│ Amazon Bedrock AgentCore Runtime (ARM64)    │
+│  ┌────────────────────────────────────────┐ │
+│  │  Mastra AI Agent (:8080)               │ │
+│  │  - /ping (ヘルスチェック)              │ │
+│  │  - /invocations (AI処理)               │ │
+│  └────────────────────────────────────────┘ │
+└─────────────────────────────────────────────┘
+              │
+              ▼
+┌─────────────────────────────────────────────┐
+│ AWS Lambda + Lambda Web Adapter             │
+│  ┌────────────────────────────────────────┐ │
+│  │  MCP Server                            │ │
+│  │  - Model Context Protocol              │ │
+│  └────────────────────────────────────────┘ │
+└─────────────────────────────────────────────┘
+              │
+              ▼
+┌─────────────────────────────────────────────┐
+│ ECS Fargate                                 │
+│  ┌────────────────────────────────────────┐ │
+│  │  x402 Backend Server (:4021)           │ │
+│  │  - コンテンツ配信                      │ │
+│  │  - x402支払い処理                      │ │
+│  └────────────────────────────────────────┘ │
+└─────────────────────────────────────────────┘
+              │
+              ▼
+┌─────────────────────────────────────────────┐
+│ ECS Fargate / App Runner                    │
+│  ┌────────────────────────────────────────┐ │
+│  │  Next.js Frontend (:3000)              │ │
+│  │  - UI                                  │ │
+│  │  - AgentCore Runtime APIクライアント   │ │
+│  └────────────────────────────────────────┘ │
+└─────────────────────────────────────────────┘
+```
+
+## プロジェクト構成
+
+```
+pkgs/
+├── mastra-agent/      # Mastra AIエージェント (AgentCore Runtime)
+├── mcp/               # MCPサーバー (Lambda)
+├── x402server/        # x402バックエンドサーバー (ECS Fargate)
+├── frontend/          # Next.jsフロントエンド (ECS Fargate/App Runner)
+└── cdk/               # AWS CDKインフラ定義
+```
+
 ## 動かし方
 
 ### インストール
 
 ```bash
-pmpm install
+pnpm install
 ```
 
-### MCPのビルド
+### ローカル開発
 
-```bash
-pnpm mcp build
-```
-
-### x402サーバーの起動
+#### 1. x402サーバーの起動
 
 ```bash
 pnpm x402server dev
 ```
 
-### CDKでAWSリソースをデプロイ
+#### 2. MCPのビルド
 
 ```bash
-pnpm cdk run deploy 'AgentCoreMastraX402Stack'
+pnpm mcp build
+```
+
+#### 3. Mastra AIエージェントの起動
+
+```bash
+pnpm mastra-agent dev
+```
+
+#### 4. フロントエンドの起動
+
+```bash
+pnpm frontend dev
+```
+
+### AWSへのデプロイ
+
+#### 1. MCPサーバーとx402バックエンドをデプロイ
+
+```bash
+# MCPをビルド（Lambda用）
+pnpm mcp build
+
+# CDKでデプロイ
+pnpm cdk deploy 'AgentCoreMastraX402Stack'
+```
+
+#### 2. Mastra AIエージェントをECR/AgentCore Runtimeにデプロイ
+
+```bash
+cd pkgs/mastra-agent
+
+# Dockerイメージをビルド（ARM64）
+docker buildx build --platform linux/arm64 \
+  -t <account-id>.dkr.ecr.<region>.amazonaws.com/agentcore-mastra-agent:latest \
+  --push .
+
+# AgentCore Runtimeにデプロイ（CDKスタック更新）
+```
+
+#### 3. フロントエンドをECS Fargateにデプロイ
+
+```bash
+cd pkgs/frontend
+
+# Dockerイメージをビルド
+docker build -t <account-id>.dkr.ecr.<region>.amazonaws.com/agentcore-frontend:latest .
+docker push <account-id>.dkr.ecr.<region>.amazonaws.com/agentcore-frontend:latest
+
+# CDKスタック更新
 ```
 
 ### AWSリソースを削除
 
 ```bash
-pnpm cdk run destroy 'AgentCoreMastraX402Stack' --force
+pnpm cdk destroy 'AgentCoreMastraX402Stack' --force
 ```
+
+## 各パッケージの詳細
+
+- **mastra-agent**: [README](./pkgs/mastra-agent/README.md)
+- **mcp**: [README](./pkgs/mcp/README.md)
+- **x402server**: [README](./pkgs/x402server/README.md)
+- **frontend**: [README](./pkgs/frontend/README.md)
+- **cdk**: [README](./pkgs/cdk/README.md)
