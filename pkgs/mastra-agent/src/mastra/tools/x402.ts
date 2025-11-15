@@ -1,3 +1,4 @@
+import { ConsoleLogger } from "@mastra/core/logger";
 import { MCPClient } from "@mastra/mcp";
 
 /**

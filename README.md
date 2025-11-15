@@ -90,6 +90,30 @@ pnpm frontend dev
 
 ### AWSへのデプロイ
 
+#### 事前準備(Mastra AgentのECRリポジトリ作成とコンテナイメージプッシュ)
+
+ECRリポジトリの作成
+
+```bash
+aws ecr create-repository --repository-name agentcore-mastra-agent
+```
+
+Dockerイメージのタグづけとプッシュ
+
+```bash
+export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+
+# ECRログイン
+aws ecr get-login-password --region ap-northeast-1 | \
+  docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.ap-northeast-1.amazonaws.com
+
+# タグ付け
+docker tag mastra-agent:latest $AWS_ACCOUNT_ID.dkr.ecr.ap-northeast-1.amazonaws.com/agentcore-mastra-agent:latest
+
+# プッシュ
+docker push $AWS_ACCOUNT_ID.dkr.ecr.ap-northeast-1.amazonaws.com/agentcore-mastra-agent:latest
+```
+
 #### 1. MCPサーバーとx402バックエンドをデプロイ
 
 ```bash
@@ -97,7 +121,7 @@ pnpm frontend dev
 pnpm mcp build
 
 # CDKでデプロイ
-pnpm cdk deploy 'AgentCoreMastraX402Stack'
+pnpm cdk run deploy 'AgentCoreMastraX402Stack'
 ```
 
 #### 2. Mastra AIエージェントをECR/AgentCore Runtimeにデプロイ

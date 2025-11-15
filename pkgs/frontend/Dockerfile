@@ -1,10 +1,10 @@
 # ==============================================================================
-# Multi-stage Dockerfile for Next.js 15 + Mastra Frontend Application
+# Multi-stage Dockerfile for Next.js 15 Frontend Application
 # Optimized for AWS ECS Fargate deployment
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
-# Stage 1: Dependencies - Install all dependencies including devDependencies
+# Stage 1: Dependencies - Install only production dependencies
 # ------------------------------------------------------------------------------
 FROM node:22-alpine AS deps
 
@@ -14,15 +14,15 @@ RUN corepack enable && corepack prepare pnpm@10.7.0 --activate
 # Set working directory
 WORKDIR /app
 
-# Copy package manager files
-COPY package.json pnpm-lock.yaml* ./
+# Copy package files
+COPY package.json ./
 
-# Install dependencies
-# Use --frozen-lockfile to ensure reproducible builds
-RUN pnpm install --frozen-lockfile
+# Install dependencies without lockfile (for simplified build)
+# In production, use --frozen-lockfile with proper lockfile management
+RUN pnpm install --prod --no-lockfile
 
 # ------------------------------------------------------------------------------
-# Stage 2: Builder - Build the Next.js application
+# Stage 2: Builder - Build the Next.js application with all dependencies
 # ------------------------------------------------------------------------------
 FROM node:22-alpine AS builder
 
@@ -31,8 +31,9 @@ RUN corepack enable && corepack prepare pnpm@10.7.0 --activate
 
 WORKDIR /app
 
-# Copy dependencies from deps stage
-COPY --from=deps /app/node_modules ./node_modules
+# Copy package file and install ALL dependencies (including dev dependencies for build)
+COPY package.json ./
+RUN pnpm install --no-lockfile
 
 # Copy application source code
 COPY . .

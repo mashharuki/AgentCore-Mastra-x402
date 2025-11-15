@@ -1,157 +1,85 @@
 "use server";
 
-import { mastra } from "@/mastra";
-
 /**
- * MCP接続をテストするメソッド
- */
-export async function testMCPConnection() {
-  try {
-    const { testMCPConnection } = await import("@/mastra/tools/x402");
-    const result = await testMCPConnection();
-    return result;
-  } catch (error) {
-    console.error("Failed to test MCP connection:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
-}
-
-/**
- * x402のMCPサーバーを呼び出すメソッド（改善版）
- * @param prompt
- * @param useGemini - trueの場合はGeminiモデルを使用（デフォルト: false）
- * @returns
+ * AgentCore Runtime の /invocations エンドポイントを呼び出す
+ * @param prompt - ユーザーからのプロンプト
+ * @param useGemini - Geminiモデルを使用するか (現在はAgentCore側で決定)
+ * @returns AI応答データ
  */
 export async function callx402Mcp(prompt: string, useGemini = false) {
-  const agent = await mastra.getAgent("x402Agent", useGemini);
-
   try {
-    console.log(`Calling agent with prompt: ${prompt}`);
+    // AgentCore Runtime のエンドポイント
+    const agentCoreUrl = process.env.AGENTCORE_RUNTIME_URL;
 
-    // generateメソッドを使用して完全な応答を取得
-    const result = await agent.generate(`${prompt}`);
-    console.log("Agent generate result:", JSON.stringify(result, null, 2));
-
-    // Mastraエージェントの結果を詳細に分析
-    let responseText = "";
-    let stepsInfo: unknown[] = [];
-    let lastStepType = "no-steps";
-
-    // resultの型に応じて適切に処理
-    if (typeof result === "string") {
-      responseText = result;
-    } else if (result && typeof result === "object") {
-      // 'text'プロパティを確認
-      if ("text" in result) {
-        responseText = String(result.text || "");
-      }
-
-      // 'steps'プロパティを確認（Promiseの場合もあるため）
-      if ("steps" in result) {
-        const stepsValue = result.steps;
-
-        // stepsがPromiseの場合は解決
-        if (
-          stepsValue &&
-          typeof stepsValue === "object" &&
-          "then" in stepsValue
-        ) {
-          try {
-            console.log("Steps is a Promise, awaiting...");
-            const awaitedSteps = await stepsValue;
-            console.log("Awaited steps:", awaitedSteps);
-
-            if (Array.isArray(awaitedSteps)) {
-              stepsInfo = awaitedSteps;
-              if (awaitedSteps.length > 0) {
-                const lastStep = awaitedSteps[awaitedSteps.length - 1];
-                if (
-                  lastStep &&
-                  typeof lastStep === "object" &&
-                  "stepType" in lastStep
-                ) {
-                  lastStepType = String(lastStep.stepType);
-                }
-              }
-            }
-          } catch (stepError) {
-            console.error("Error awaiting steps:", stepError);
-          }
-        } else if (Array.isArray(stepsValue)) {
-          // 既に配列の場合
-          stepsInfo = stepsValue;
-          if (stepsValue.length > 0) {
-            const lastStep = stepsValue[stepsValue.length - 1];
-            if (
-              lastStep &&
-              typeof lastStep === "object" &&
-              "stepType" in lastStep
-            ) {
-              lastStepType = String(lastStep.stepType);
-            }
-          }
-        }
-      }
-
-      // 他のプロパティもログ出力してデバッグ
-      console.log("Result properties:", Object.keys(result));
-      for (const [key, value] of Object.entries(result)) {
-        console.log(`${key}:`, typeof value, value);
-      }
-    }
-
-    // 不完全なレスポンスの検出
-    const isIncomplete =
-      responseText.includes("<thinking>") &&
-      !responseText.includes("</thinking>");
-    const hasNoToolCalls =
-      stepsInfo.length === 0 ||
-      (stepsInfo.length > 0 &&
-        !stepsInfo.some((step) => {
-          if (typeof step !== "object" || step === null) return false;
-          const stepObj = step as Record<string, unknown>;
-          return (
-            "toolCalls" in stepObj &&
-            Array.isArray(stepObj.toolCalls) &&
-            stepObj.toolCalls.length > 0
-          );
-        }));
-
-    if (isIncomplete || hasNoToolCalls) {
-      console.warn("Detected incomplete or missing tool call response");
+    if (!agentCoreUrl) {
+      console.error("AGENTCORE_RUNTIME_URL is not set");
       return {
-        text: "申し訳ございません。AIエージェントがツールを正しく呼び出せませんでした。\n\nこれはAmazon Nova Liteモデルの制限により発生する可能性があります。\n代替案として、MCPサーバーに直接接続するか、別のモデル（Gemini等）を使用することをお勧めします。",
-        steps: stepsInfo.length,
-        lastStepType: "incomplete",
-        rawResult: {
-          hasSteps: stepsInfo.length > 0,
-          stepsLength: stepsInfo.length,
-          hasText: !!responseText,
-          resultType: typeof result,
-          isIncomplete: true,
-          originalText: responseText,
-        },
+        text: "エラー: AgentCore Runtime URLが設定されていません",
+        error: "Configuration error",
       };
     }
 
-    const finalResult = {
-      text: responseText || "エージェントからの応答を取得できませんでした",
-      steps: stepsInfo.length,
-      lastStepType,
+    console.log(`Calling AgentCore Runtime: ${agentCoreUrl}/invocations`);
+    console.log(`Prompt: ${prompt}`);
+    console.log(
+      `Use Gemini: ${useGemini} (note: model is configured on AgentCore side)`,
+    );
+
+    // AgentCore Runtime の /invocations エンドポイントを呼び出し
+    const response = await fetch(`${agentCoreUrl}/invocations`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        prompt: prompt,
+      }),
+      // タイムアウト設定（30秒）
+      signal: AbortSignal.timeout(30000),
+    });
+
+    if (!response.ok) {
+      console.error(
+        `AgentCore Runtime returned error: ${response.status} ${response.statusText}`,
+      );
+      const errorText = await response.text();
+      console.error("Error details:", errorText);
+      return {
+        text: `エラー: AgentCore Runtimeからエラーが返されました (${response.status})`,
+        error: errorText,
+      };
+    }
+
+    const result = await response.json();
+    console.log("AgentCore Runtime response:", result);
+
+    // AgentCore Runtimeのレスポンス形式に合わせて処理
+    // 期待される形式: { response: string, status: string, metadata: { model: string, tokens: number } }
+    if (result.response) {
+      return {
+        text: result.response,
+        steps: 0,
+        lastStepType: "agentcore-response",
+        rawResult: {
+          hasSteps: false,
+          stepsLength: 0,
+          hasText: true,
+        },
+        metadata: result.metadata,
+      };
+    }
+
+    // フォールバック
+    return {
+      text: typeof result === "string" ? result : JSON.stringify(result),
+      steps: 0,
+      lastStepType: "unknown",
       rawResult: {
-        hasSteps: stepsInfo.length > 0,
-        stepsLength: stepsInfo.length,
-        hasText: !!responseText,
-        resultType: typeof result,
-        allSteps: stepsInfo, // デバッグ用にすべてのステップ情報を含める
+        hasSteps: false,
+        stepsLength: 0,
+        hasText: true,
       },
     };
-
-    console.log("Final result to return:", finalResult);
-    return finalResult;
   } catch (error) {
     console.error("Error in callx402Mcp:", error);
     return {
