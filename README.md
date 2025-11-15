@@ -52,11 +52,22 @@ Amazon Bedrock AgentCore Mastra x402でつくる次世代金融AI Agentのサン
 
 ### 設定管理
 
-Mastra AgentはAWS Systems Manager Parameter Storeを使用して実行時の設定を取得します:
+#### Mastra Agent (AgentCore Runtime)
+
+AWS Systems Manager Parameter Storeを使用して実行時の設定を取得:
 
 - **パラメータ名**: `/agentcore/mastra/mcp-server-url`
 - **値**: MCP Server Function URL (デプロイ時に自動設定)
 - **用途**: AgentCore RuntimeコンテナがMCPサーバーと通信するためのURL
+
+#### Frontend (Next.js)
+
+AWS SDK for BedrockAgentCoreを使用してAgentCore Runtimeを呼び出し:
+
+- **環境変数**: `AGENTCORE_RUNTIME_ARN`
+- **形式**: `arn:aws:bedrock-agentcore:{region}:{account}:runtime/{runtime-id}/runtime-endpoint/DEFAULT`
+- **用途**: フロントエンドがAgentCore RuntimeのInvokeAgentRuntimeCommand APIを呼び出すためのARN
+- **認証**: ECS TaskロールのIAM権限を使用
 
 ## プロジェクト構成
 
@@ -113,6 +124,12 @@ ECRリポジトリの作成
 aws ecr create-repository --repository-name agentcore-mastra-agent
 ```
 
+Dockerイメージのビルド
+
+```bash
+docker build --platform linux/arm64 -t mastra-agent:latest .
+```
+
 Dockerイメージのタグづけとプッシュ
 
 ```bash
@@ -137,7 +154,7 @@ ECRリポジトリの作成
 aws ecr create-repository --repository-name agentcore-mastra-frontend
 ```
 
-Dockerイメージのタグづけとプッシュ
+Dockerイメージのビルドとプッシュ
 
 ```bash
 export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
@@ -146,11 +163,13 @@ export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output tex
 aws ecr get-login-password --region ap-northeast-1 | \
   docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.ap-northeast-1.amazonaws.com
 
-# タグ付け
-docker tag agentcore-frontend:latest $AWS_ACCOUNT_ID.dkr.ecr.ap-northeast-1.amazonaws.com/agentcore-mastra-frontend:latest
+# linux/amd64プラットフォーム向けにビルド (Fargate x86_64用)
+cd pkgs/frontend
+docker buildx build --platform linux/amd64 \
+  -t $AWS_ACCOUNT_ID.dkr.ecr.ap-northeast-1.amazonaws.com/agentcore-mastra-frontend:latest \
+  --push .
 
-# プッシュ
-docker push $AWS_ACCOUNT_ID.dkr.ecr.ap-northeast-1.amazonaws.com/agentcore-mastra-frontend:latest
+cd ../..
 ```
 
 #### 1. MCPサーバーとx402バックエンドをデプロイ
@@ -170,6 +189,12 @@ pnpm cdk run deploy 'AgentCoreMastraX402Stack'
 ```bash
 pnpm cdk run destroy 'AgentCoreMastraX402Stack' --force
 ```
+
+### ECRにプッシュしたコンテナイメージは手動で削除が必要
+
+- `x402-backend-api`
+- `agentcore-mastra-frontend`
+- `agentcore-mastra-agent`
 
 ## 各パッケージの詳細
 

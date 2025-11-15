@@ -1,57 +1,84 @@
 "use server";
 
+import {
+  BedrockAgentCoreClient,
+  InvokeAgentRuntimeCommand,
+} from "@aws-sdk/client-bedrock-agentcore";
+import { randomBytes } from "node:crypto";
+
 /**
- * AgentCore Runtime の /invocations エンドポイントを呼び出す
+ * AWS SDK を使用して AgentCore Runtime を呼び出す
  * @param prompt - ユーザーからのプロンプト
  * @param useGemini - Geminiモデルを使用するか (現在はAgentCore側で決定)
  * @returns AI応答データ
  */
 export async function callx402Mcp(prompt: string, useGemini = false) {
   try {
-    // AgentCore Runtime のエンドポイント
-    const agentCoreUrl = process.env.AGENTCORE_RUNTIME_URL;
+    // 環境変数から AgentCore Runtime ARN を取得
+    const agentRuntimeArn = process.env.AGENTCORE_RUNTIME_ARN;
+    const region = process.env.AWS_REGION || "ap-northeast-1";
 
-    if (!agentCoreUrl) {
-      console.error("AGENTCORE_RUNTIME_URL is not set");
+    if (!agentRuntimeArn) {
+      console.error("AGENTCORE_RUNTIME_ARN is not set");
       return {
-        text: "エラー: AgentCore Runtime URLが設定されていません",
+        text: "エラー: AgentCore Runtime ARNが設定されていません",
         error: "Configuration error",
       };
     }
 
-    console.log(`Calling AgentCore Runtime: ${agentCoreUrl}/invocations`);
+    console.log(`Calling AgentCore Runtime: ${agentRuntimeArn}`);
     console.log(`Prompt: ${prompt}`);
     console.log(
       `Use Gemini: ${useGemini} (note: model is configured on AgentCore side)`,
     );
 
-    // AgentCore Runtime の /invocations エンドポイントを呼び出し
-    const response = await fetch(`${agentCoreUrl}/invocations`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        prompt: prompt,
-      }),
-      // タイムアウト設定（30秒）
-      signal: AbortSignal.timeout(30000),
+    // BedrockAgentCore クライアントを初期化
+    const client = new BedrockAgentCoreClient({
+      region,
     });
 
-    if (!response.ok) {
-      console.error(
-        `AgentCore Runtime returned error: ${response.status} ${response.statusText}`,
-      );
-      const errorText = await response.text();
-      console.error("Error details:", errorText);
+    // プロンプトをバイナリ形式に変換
+    const payload = new TextEncoder().encode(prompt);
+
+    // 33文字以上のランダムなセッションIDを生成
+    const runtimeSessionId = `session-${randomBytes(16).toString("hex")}`;
+
+    // InvokeAgentRuntimeCommand を実行
+    const command = new InvokeAgentRuntimeCommand({
+      runtimeSessionId,
+      agentRuntimeArn,
+      qualifier: "DEFAULT",
+      payload,
+    });
+
+    console.log("Sending command to AgentCore Runtime...");
+    const response = await client.send(command);
+
+    // レスポンスをテキストに変換
+    if (!response.response) {
+      console.error("No response from AgentCore Runtime");
       return {
-        text: `エラー: AgentCore Runtimeからエラーが返されました (${response.status})`,
-        error: errorText,
+        text: "エラー: AgentCore Runtimeからレスポンスがありません",
+        error: "No response",
       };
     }
 
-    const result = await response.json();
-    console.log("AgentCore Runtime response:", result);
+    const textResponse = await response.response.transformToString();
+    console.log("AgentCore Runtime raw response:", textResponse);
+
+    // JSON形式でパース (Mastra AgentがJSON形式で返すと仮定)
+    let result: {
+      response?: string;
+      metadata?: { model?: string; tokens?: number };
+    };
+    try {
+      result = JSON.parse(textResponse);
+    } catch {
+      // JSON形式でない場合はテキストとして扱う
+      result = { response: textResponse };
+    }
+
+    console.log("AgentCore Runtime parsed response:", result);
 
     // AgentCore Runtimeのレスポンス形式に合わせて処理
     // 期待される形式: { response: string, status: string, metadata: { model: string, tokens: number } }

@@ -1,52 +1,72 @@
+import {
+  BedrockAgentCoreClient,
+  InvokeAgentRuntimeCommand,
+} from "@aws-sdk/client-bedrock-agentcore";
 import { NextResponse } from "next/server";
+import { randomBytes } from "node:crypto";
 
 /**
  * Chat API Route
- * AgentCore Runtime の /invocations エンドポイントを呼び出す
+ * AWS SDK を使用して AgentCore Runtime を呼び出す
  */
 export async function POST(req: Request) {
   try {
     const { city } = await req.json();
 
-    // AgentCore Runtime のエンドポイント (環境変数から取得)
-    const agentCoreUrl = process.env.AGENTCORE_RUNTIME_URL;
+    // 環境変数から AgentCore Runtime ARN を取得
+    const agentRuntimeArn = process.env.AGENTCORE_RUNTIME_ARN;
+    const region = process.env.AWS_REGION || "ap-northeast-1";
 
-    if (!agentCoreUrl) {
-      console.error("AGENTCORE_RUNTIME_URL is not set");
+    if (!agentRuntimeArn) {
+      console.error("AGENTCORE_RUNTIME_ARN is not set");
       return NextResponse.json(
-        { error: "AgentCore Runtime URL is not configured" },
+        { error: "AgentCore Runtime ARN is not configured" },
         { status: 500 },
       );
     }
 
-    console.log(`Calling AgentCore Runtime: ${agentCoreUrl}/invocations`);
+    console.log(`Calling AgentCore Runtime: ${agentRuntimeArn}`);
     console.log(`Query: What's the weather like in ${city}?`);
 
-    // AgentCore Runtime の /invocations エンドポイントを呼び出し
-    const response = await fetch(`${agentCoreUrl}/invocations`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        prompt: `What's the weather like in ${city}?`,
-      }),
+    // BedrockAgentCore クライアントを初期化
+    const client = new BedrockAgentCoreClient({
+      region,
     });
 
-    if (!response.ok) {
-      console.error(
-        `AgentCore Runtime returned error: ${response.status} ${response.statusText}`,
-      );
-      const errorText = await response.text();
-      console.error("Error details:", errorText);
-      return NextResponse.json(
-        { error: "Failed to get response from AgentCore Runtime" },
-        { status: response.status },
-      );
+    // プロンプトをバイナリ形式に変換
+    const inputText = `What's the weather like in ${city}?`;
+    const payload = new TextEncoder().encode(inputText);
+
+    // 33文字以上のランダムなセッションIDを生成
+    const runtimeSessionId = `session-${randomBytes(16).toString("hex")}`;
+
+    // InvokeAgentRuntimeCommand を実行
+    const command = new InvokeAgentRuntimeCommand({
+      runtimeSessionId,
+      agentRuntimeArn,
+      qualifier: "DEFAULT",
+      payload,
+    });
+
+    console.log("Sending command to AgentCore Runtime...");
+    const response = await client.send(command);
+
+    // レスポンスをテキストに変換
+    if (!response.response) {
+      throw new Error("No response from AgentCore Runtime");
     }
 
-    const result = await response.json();
-    console.log("AgentCore Runtime response:", result);
+    const textResponse = await response.response.transformToString();
+    console.log("AgentCore Runtime response:", textResponse);
+
+    // JSON形式でパース (Mastra AgentがJSON形式で返すと仮定)
+    let result;
+    try {
+      result = JSON.parse(textResponse);
+    } catch {
+      // JSON形式でない場合はそのまま返す
+      result = { response: textResponse };
+    }
 
     return NextResponse.json(result);
   } catch (error) {

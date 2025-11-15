@@ -462,9 +462,10 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
             environment: {
               PORT: "3000",
               NODE_ENV: "production",
-              // Connect to AgentCore Runtime endpoint
-              AGENTCORE_RUNTIME_ARN: agentCoreRuntime.attrAgentRuntimeArn,
-              AGENTCORE_ENDPOINT_NAME: agentCoreEndpoint.name,
+              AWS_REGION: this.region,
+              // AgentCore Runtime の完全なエンドポイントARN
+              // 形式: arn:aws:bedrock-agentcore:{region}:{account}:runtime/{runtime-id}/runtime-endpoint/DEFAULT
+              AGENTCORE_RUNTIME_ARN: `${agentCoreRuntime.attrAgentRuntimeArn}/runtime-endpoint/DEFAULT`,
             },
             logDriver: ecs.LogDrivers.awsLogs({
               streamPrefix: "agentcore-frontend",
@@ -494,6 +495,22 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
       healthyThresholdCount: 2,
       unhealthyThresholdCount: 5,
     });
+
+    // Grant Frontend task role permission to invoke AgentCore Runtime
+    frontendService.taskDefinition.taskRole.addToPrincipalPolicy(
+      new iam.PolicyStatement({
+        sid: "InvokeAgentCoreRuntime",
+        effect: iam.Effect.ALLOW,
+        actions: [
+          "bedrock-agentcore:InvokeAgentRuntime",
+          "bedrock-agentcore:InvokeAgentRuntimeWithResponseStream",
+        ],
+        resources: [
+          agentCoreRuntime.attrAgentRuntimeArn,
+          `${agentCoreRuntime.attrAgentRuntimeArn}/*`,
+        ],
+      }),
+    );
 
     // ===========================================================================
     // 成果物
