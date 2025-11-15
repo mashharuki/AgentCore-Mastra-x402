@@ -1,8 +1,11 @@
 import * as cdk from "aws-cdk-lib";
+import * as agentcore from "aws-cdk-lib/aws-bedrockagentcore";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as ecr from "aws-cdk-lib/aws-ecr";
+import * as ecr_assets from "aws-cdk-lib/aws-ecr-assets";
 import * as ecs from "aws-cdk-lib/aws-ecs";
 import * as ecsPatterns from "aws-cdk-lib/aws-ecs-patterns";
+import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as logs from "aws-cdk-lib/aws-logs";
 import type { Construct } from "constructs";
@@ -225,72 +228,178 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
     });
 
     // ===========================================================================
-    // Fargateで Mastra AI Agent (AgentCore Runtime互換) をデプロイ
+    // Amazon Bedrock AgentCore Runtime (正式なCfnRuntimeリソース)
     //　===========================================================================
 
-    // Create ECR repository reference for Mastra Agent
-    const mastraAgentRepo = ecr.Repository.fromRepositoryName(
+    // Build Docker image for AgentCore Runtime using ECR Assets
+    const agentCoreDockerImage = new ecr_assets.DockerImageAsset(
       this,
-      "AgentCoreMastraAgentRepo",
-      "agentcore-mastra-agent",
+      "AgentCoreDockerImage",
+      {
+        directory: join(__dirname, "../../mastra-agent"),
+        file: "Dockerfile",
+        platform: ecr_assets.Platform.LINUX_ARM64, // ARM64 for cost optimization
+        // 環境変数の割り当て
+        buildArgs: {
+          MCP_SERVER_URL: mcpFunctionUrl.url,
+        },
+      },
     );
 
-    // Create Fargate service for Mastra AI Agent
-    const mastraAgentService =
-      new ecsPatterns.ApplicationLoadBalancedFargateService(
-        this,
-        "AgentCoreMastraAgentService",
-        {
-          cluster,
-          serviceName: "mastra-agent",
-          cpu: 1024, // AgentCore Runtime requires sufficient CPU
-          memoryLimitMiB: 2048, // AgentCore Runtime requires sufficient memory
-          desiredCount: 1,
-          taskImageOptions: {
-            image: ecs.ContainerImage.fromEcrRepository(
-              mastraAgentRepo,
-              "latest",
-            ),
-            containerPort: 8080, // AgentCore Runtime port
-            environment: {
-              PORT: "8080",
-              NODE_ENV: "production",
-              USE_GEMINI: "true",
-              MCP_SERVER_URL: mcpFunctionUrl.url,
-            },
-            logDriver: ecs.LogDrivers.awsLogs({
-              streamPrefix: "mastra-agent",
-              logGroup: new logs.LogGroup(
-                this,
-                "AgentCoreMastraAgentLogGroup",
-                {
-                  logGroupName: "/aws/ecs/mastra-agent",
-                  retention: logs.RetentionDays.ONE_WEEK,
-                  removalPolicy: cdk.RemovalPolicy.DESTROY,
-                },
-              ),
-            }),
-          },
-          publicLoadBalancer: true,
-          assignPublicIp: true,
-          healthCheckGracePeriod: cdk.Duration.seconds(300),
-          // Use ARM64 architecture for cost optimization
-          runtimePlatform: {
-            cpuArchitecture: ecs.CpuArchitecture.ARM64,
-            operatingSystemFamily: ecs.OperatingSystemFamily.LINUX,
+    // Create IAM role for AgentCore Runtime
+    const agentCoreRole = new iam.Role(this, "BedrockAgentCoreRole", {
+      assumedBy: new iam.ServicePrincipal("bedrock-agentcore.amazonaws.com"),
+      description: "IAM role for Bedrock AgentCore Runtime",
+    });
+
+    const region = cdk.Stack.of(this).region;
+    const accountId = cdk.Stack.of(this).account;
+
+    // ECR permissions
+    agentCoreRole.addToPolicy(
+      new iam.PolicyStatement({
+        sid: "ECRImageAccess",
+        effect: iam.Effect.ALLOW,
+        actions: ["ecr:BatchGetImage", "ecr:GetDownloadUrlForLayer"],
+        resources: [`arn:aws:ecr:${region}:${accountId}:repository/*`],
+      }),
+    );
+
+    agentCoreRole.addToPolicy(
+      new iam.PolicyStatement({
+        sid: "ECRTokenAccess",
+        effect: iam.Effect.ALLOW,
+        actions: ["ecr:GetAuthorizationToken"],
+        resources: ["*"],
+      }),
+    );
+
+    // CloudWatch Logs permissions
+    agentCoreRole.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ["logs:DescribeLogStreams", "logs:CreateLogGroup"],
+        resources: [
+          `arn:aws:logs:${region}:${accountId}:log-group:/aws/bedrock-agentcore/runtimes/*`,
+        ],
+      }),
+    );
+
+    agentCoreRole.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ["logs:DescribeLogGroups"],
+        resources: [`arn:aws:logs:${region}:${accountId}:log-group:*`],
+      }),
+    );
+
+    agentCoreRole.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ["logs:CreateLogStream", "logs:PutLogEvents"],
+        resources: [
+          `arn:aws:logs:${region}:${accountId}:log-group:/aws/bedrock-agentcore/runtimes/*:log-stream:*`,
+        ],
+      }),
+    );
+
+    // X-Ray and CloudWatch Metrics permissions
+    agentCoreRole.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          "xray:PutTraceSegments",
+          "xray:PutTelemetryRecords",
+          "xray:GetSamplingRules",
+          "xray:GetSamplingTargets",
+        ],
+        resources: ["*"],
+      }),
+    );
+
+    agentCoreRole.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ["cloudwatch:PutMetricData"],
+        resources: ["*"],
+        conditions: {
+          StringEquals: {
+            "cloudwatch:namespace": "bedrock-agentcore",
           },
         },
-      );
+      }),
+    );
 
-    // Configure health check for Mastra Agent (AgentCore Runtime /ping endpoint)
-    mastraAgentService.targetGroup.configureHealthCheck({
-      path: "/ping",
-      healthyHttpCodes: "200",
-      interval: cdk.Duration.seconds(30),
-      timeout: cdk.Duration.seconds(5),
-      healthyThresholdCount: 2,
-      unhealthyThresholdCount: 5,
-    });
+    // Bedrock model invocation permissions
+    agentCoreRole.addToPolicy(
+      new iam.PolicyStatement({
+        sid: "BedrockModelInvocation",
+        effect: iam.Effect.ALLOW,
+        actions: [
+          "bedrock:InvokeModel",
+          "bedrock:InvokeModelWithResponseStream",
+        ],
+        resources: [
+          "arn:aws:bedrock:*::foundation-model/*",
+          `arn:aws:bedrock:${region}:${accountId}:*`,
+        ],
+      }),
+    );
+
+    // AgentCore workload identity permissions
+    agentCoreRole.addToPolicy(
+      new iam.PolicyStatement({
+        sid: "GetAgentAccessToken",
+        effect: iam.Effect.ALLOW,
+        actions: [
+          "bedrock-agentcore:GetWorkloadAccessToken",
+          "bedrock-agentcore:GetWorkloadAccessTokenForJWT",
+          "bedrock-agentcore:GetWorkloadAccessTokenForUserId",
+        ],
+        resources: [
+          `arn:aws:bedrock-agentcore:${region}:${accountId}:workload-identity-directory/default`,
+          `arn:aws:bedrock-agentcore:${region}:${accountId}:workload-identity-directory/default/workload-identity/agentName-*`,
+        ],
+      }),
+    );
+
+    // Create AgentCore Runtime
+    // Note: Environment variables must be baked into the Docker image
+    // The mastra-agent Dockerfile should set:
+    // - PORT=8080
+    // - NODE_ENV=production
+    // - USE_GEMINI=true (for Bedrock)
+    // - MCP_SERVER_URL (via runtime config)
+    const agentCoreRuntime = new agentcore.CfnRuntime(
+      this,
+      "MastraAgentCoreRuntime",
+      {
+        agentRuntimeName: "MastraAgentRuntime",
+        agentRuntimeArtifact: {
+          containerConfiguration: {
+            containerUri: agentCoreDockerImage.imageUri,
+          },
+        },
+        networkConfiguration: {
+          networkMode: "PUBLIC",
+        },
+        roleArn: agentCoreRole.roleArn,
+        protocolConfiguration: "HTTP",
+      },
+    );
+
+    agentCoreRuntime.node.addDependency(agentCoreRole);
+
+    // Create AgentCore Runtime Endpoint
+    const agentCoreEndpoint = new agentcore.CfnRuntimeEndpoint(
+      this,
+      "MastraAgentCoreEndpoint",
+      {
+        agentRuntimeId: agentCoreRuntime.attrAgentRuntimeId,
+        agentRuntimeVersion: agentCoreRuntime.attrAgentRuntimeVersion,
+        name: "MastraAgentRuntimeEndpoint",
+      },
+    );
 
     // ===========================================================================
     // Fargateで Next.js Frontend をデプロイ
@@ -320,8 +429,10 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
             environment: {
               PORT: "3000",
               NODE_ENV: "production",
-              // Connect to Mastra Agent service
-              AGENTCORE_RUNTIME_URL: `http://${mastraAgentService.loadBalancer.loadBalancerDnsName}`,
+              // Connect to AgentCore Runtime endpoint
+              // Note: AgentCore endpoint URL format is: https://<endpoint-id>.agentcore.<region>.amazonaws.com
+              AGENTCORE_RUNTIME_ARN: agentCoreRuntime.attrAgentRuntimeArn,
+              AGENTCORE_ENDPOINT_NAME: agentCoreEndpoint.name,
             },
             logDriver: ecs.LogDrivers.awsLogs({
               streamPrefix: "agentcore-frontend",
@@ -366,9 +477,19 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
       description: "MCP Server Function URL",
     });
 
-    new cdk.CfnOutput(this, "AgentCoreMastraAgentUrl", {
-      value: `http://${mastraAgentService.loadBalancer.loadBalancerDnsName}`,
-      description: "Mastra AI Agent (AgentCore Runtime) Load Balancer URL",
+    new cdk.CfnOutput(this, "AgentCoreMastraRuntimeArn", {
+      value: agentCoreRuntime.attrAgentRuntimeArn,
+      description: "Amazon Bedrock AgentCore Runtime ARN",
+    });
+
+    new cdk.CfnOutput(this, "AgentCoreMastraRuntimeId", {
+      value: agentCoreRuntime.attrAgentRuntimeId,
+      description: "Amazon Bedrock AgentCore Runtime ID",
+    });
+
+    new cdk.CfnOutput(this, "AgentCoreMastraEndpointArn", {
+      value: agentCoreEndpoint.attrAgentRuntimeEndpointArn,
+      description: "Amazon Bedrock AgentCore Runtime Endpoint ARN",
     });
 
     new cdk.CfnOutput(this, "AgentCoreMastraFrontendUrl", {
