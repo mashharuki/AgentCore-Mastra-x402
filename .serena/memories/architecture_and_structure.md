@@ -64,15 +64,27 @@ cdk/
 
 ### デプロイリソース
 1. **VPC**: 2つのAZ、1つのNATゲートウェイ
-2. **ECS Fargate**: x402バックエンドサーバー
+2. **x402 Backend (ECS Fargate)**: x402バックエンドサーバー
    - ECRから最新イメージをプル
    - ALB経由でアクセス
    - ヘルスチェック: `/health`
    - ログ: CloudWatch Logs（1週間保持）
-3. **Lambda**: MCPサーバー
+3. **MCP Server (Lambda)**: MCPサーバー
    - Lambda Web Adaptor使用
    - Node.js 22.x
    - ローカルバンドリング（esbuild）
+   - Function URL でアクセス
+4. **Amazon Bedrock AgentCore Runtime**: ⭐ 正式なCloudFormationリソース
+   - `AWS::BedrockAgentCore::Runtime` を使用
+   - `AWS::BedrockAgentCore::RuntimeEndpoint` でエンドポイント作成
+   - ARM64 Dockerイメージ（ECR Assets経由）
+   - IAMロールで必要な権限を付与
+   - 環境変数はビルド時にARGで注入
+5. **Frontend (ECS Fargate)**: Next.js PWAフロントエンド
+   - ECRから最新イメージをプル
+   - ALB経由でアクセス
+   - AgentCore RuntimeのARNを環境変数で参照
+   - ヘルスチェック: `/api/health`
 
 ## MCP サーバー (pkgs/mcp/)
 ### 構造

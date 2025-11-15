@@ -27,17 +27,17 @@
         "start-mcp-server"
       ]
     },
+    "awslabs.aws-diagram-mcp-server": {
+      "command": "uvx",
+      "args": ["awslabs.aws-diagram-mcp-server"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      }
+    },
     "x402-mcp-server": {
       "command": "node",
       "args": ["${workspaceFolder}/pkgs/mcp/dist/index.js"],
       "envFile": "${workspaceFolder}/pkgs/mcp/.env"
-    },
-    "x402-mcp-server-remote": {
-      "type": "sse",
-      "url": "https://bjbch2wcujuerkla6ayati55ge0pkgon.lambda-url.ap-northeast-1.on.aws/mcp",
-      "headers": {
-        "VERSION": "1.2"
-      }
     }
   }
 }

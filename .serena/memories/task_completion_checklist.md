@@ -59,20 +59,43 @@ pnpm x402server build
 ## デプロイ前チェック（本番環境）
 ### 1. 差分確認
 ```bash
+cd pkgs/cdk
 pnpm cdk diff
 ```
 - CloudFormationの差分を確認
 - 意図しない変更がないか確認
+- AgentCore Runtimeリソースの変更を確認
 
 ### 2. 環境変数確認
 - `.env`ファイルが正しく設定されているか
 - 秘密情報がハードコードされていないか
 - 必要な環境変数がすべて設定されているか
+  - `FACILITATOR_URL`
+  - `ADDRESS`
+  - `NETWORK`
+  - `ENDPOINT_PATH`
+  - `PRIVATE_KEY`
 
-### 3. セキュリティチェック
+### 3. Docker イメージ確認（AgentCore Runtime用）
+```bash
+cd pkgs/mastra-agent
+docker build --platform linux/arm64 -t test-agentcore-runtime .
+```
+- ARM64ビルドが成功するか確認
+- ビルド引数（ARG）が正しく設定されているか確認
+
+### 4. セキュリティチェック
 - APIキー・パスワードが環境変数管理されているか
 - 不要な依存関係がないか
 - 脆弱性がないか（pnpm audit）
+- IAMロールの権限が最小限か確認
+
+### 5. CDK合成確認
+```bash
+pnpm cdk synth
+```
+- CloudFormationテンプレートが正しく生成されるか
+- `AWS::BedrockAgentCore::Runtime`リソースが含まれているか確認
 
 ## Git操作
 ### 1. 変更確認
