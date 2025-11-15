@@ -6,17 +6,29 @@ Amazon Bedrock AgentCore Mastra x402でつくる次世代金融AI Agentのサン
 ### インストール
 
 ```bash
-bun install
+pmpm install
+```
+
+### MCPのビルド
+
+```bash
+pnpm mcp build
+```
+
+### x402サーバーの起動
+
+```bash
+pnpm x402server dev
 ```
 
 ### CDKでAWSリソースをデプロイ
 
 ```bash
-bun cdk run deploy 'AgentCoreMastraX402Stack'
+pnpm cdk run deploy 'AgentCoreMastraX402Stack'
 ```
 
 ### AWSリソースを削除
 
 ```bash
-bun cdk run destroy 'AgentCoreMastraX402Stack' --force
+pnpm cdk run destroy 'AgentCoreMastraX402Stack' --force
 ```

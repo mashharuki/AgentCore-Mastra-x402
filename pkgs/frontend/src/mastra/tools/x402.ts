@@ -1,4 +1,3 @@
-import { ConsoleLogger } from "@mastra/core/logger";
 import { MCPClient } from "@mastra/mcp";
 
 /**
@@ -11,14 +10,25 @@ export const createx402MCPClient = () => {
   const mcpClient = new MCPClient({
     id: "x402-tools",
     servers: {
-      x402: {
-        // sse: true,
-        url: new URL(`${process.env.MCP_SERVER_URL}/mcp`),
-        // @ts-expect-error server is not a function
-        log: new ConsoleLogger(),
+      // リモートの場合
+      // x402: {
+      //   // sse: true,
+      //   url: new URL(`${process.env.MCP_SERVER_URL}/mcp`),
+      //   // @ts-expect-error server is not a function
+      //   log: new ConsoleLogger(),
+      // },
+      // ローカル開発用の場合
+      "x402-mcp-server": {
+        command: "node",
+        args: [`${process.cwd()}/../mcp/dist/index.js`],
+        env: {
+          PRIVATE_KEY: process.env.PRIVATE_KEY as string,
+          RESOURCE_SERVER_URL: process.env.RESOURCE_SERVER_URL as string,
+          ENDPOINT_PATH: process.env.ENDPOINT_PATH as string,
+        },
+        timeout: 60000, // Timeout: 60 seconds,
       },
     },
-    timeout: 60000, // Timeout: 60 seconds
   });
 
   return mcpClient;
