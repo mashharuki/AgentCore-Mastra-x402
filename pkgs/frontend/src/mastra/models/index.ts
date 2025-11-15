@@ -6,7 +6,9 @@ export const gemini = google("gemini-2.0-flash");
 
 // create Amazon Bedrock client
 const bedrock = createAmazonBedrock({
-  apiKey: process.env.AMAZOM_BEDROCK_API_KEY || "",
+  apiKey: process.env.AMAZON_BEDROCK_API_KEY || "",
   region: "ap-northeast-1",
 });
-export const bedrockModel = bedrock("amazon.nova-lite-v1:0");
+export const bedrockModel = bedrock(
+  "anthropic.claude-sonnet-4-5-20250929-v1:0",
+);

@@ -7,11 +7,22 @@ import { createx402Agent } from "./agents";
 // グローバルなMastraインスタンス
 let _mastra: Mastra | null = null;
 let _x402Agent: Agent | null = null;
+let _currentModelType: "bedrock" | "gemini" = "bedrock";
 
 /**
  * Mastra用のインスタンスを取得（遅延初期化）
+ * @param useGemini - trueの場合はGeminiモデルを使用
  */
-export const getMastra = async (): Promise<Mastra> => {
+export const getMastra = async (useGemini = false): Promise<Mastra> => {
+  const requestedModelType = useGemini ? "gemini" : "bedrock";
+
+  // モデルが変わる場合は再初期化
+  if (_mastra && requestedModelType !== _currentModelType) {
+    console.log("Model preference changed, reinitializing Mastra...");
+    _mastra = null;
+    _x402Agent = null;
+  }
+
   if (_mastra) {
     return _mastra;
   }
@@ -19,7 +30,8 @@ export const getMastra = async (): Promise<Mastra> => {
   console.log("Initializing Mastra instance...");
 
   // x402Agentを非同期で作成
-  _x402Agent = await createx402Agent();
+  _x402Agent = await createx402Agent(useGemini);
+  _currentModelType = requestedModelType;
 
   _mastra = new Mastra({
     agents: { x402Agent: _x402Agent },
@@ -38,8 +50,8 @@ export const getMastra = async (): Promise<Mastra> => {
  * @deprecated Use getMastra() instead
  */
 export const mastra = {
-  async getAgent(name: string) {
-    const instance = await getMastra();
+  async getAgent(name: string, useGemini = false) {
+    const instance = await getMastra(useGemini);
     return instance.getAgent(name);
   },
 };

@@ -1,11 +1,12 @@
 import { Agent } from "@mastra/core/agent";
-import { bedrockModel } from "../models";
+import { bedrockModel, gemini } from "../models";
 import { createx402MCPClient, testMCPConnection } from "../tools/x402";
 
 /**
  * x402 Agent を作成する関数
+ * @param useGemini - trueの場合はGeminiモデルを使用（デフォルト: false）
  */
-export const createx402Agent = async () => {
+export const createx402Agent = async (useGemini = false) => {
   try {
     console.log("Testing MCP connection...");
     const connectionTest = await testMCPConnection();
@@ -22,19 +23,30 @@ export const createx402Agent = async () => {
     console.log("Available tools:", tools);
 
     console.log("Creating x402 Agent with tools...");
+    const selectedModel = useGemini ? gemini : bedrockModel;
+    console.log(`Using model: ${useGemini ? "Gemini" : "Amazon Nova Lite"}`);
+
     return new Agent({
       name: "x402 Agent",
       instructions: `
-        You are a helpful x402 assistant that provides accurate information.
+        You are a helpful assistant that retrieves information from a resource server using available tools.
 
-        Your primary function is to help users get any information details for resource server.
-        ex): get weather information from resource server
+        IMPORTANT INSTRUCTIONS:
+        1. When a user asks for weather information or any data from the resource server, you MUST use the "get-data-from-resource-server" tool.
+        2. Always call the tool first before providing any response.
+        3. After receiving the tool's response, format it in a user-friendly way in Japanese.
+        4. The tool returns data in JSON format with properties like "weather" and "temperature".
+        5. Convert temperature from Fahrenheit to Celsius if needed (°C = (°F - 32) × 5/9).
 
-        Use the x402 tools to fetch any information from the resource server.
-        
-        When user asks for weather information, use the available tools to get data from the resource server.
+        Example flow:
+        User: "天気を教えて"
+        You: [Call get-data-from-resource-server tool]
+        Tool returns: {"weather": "sunny", "temperature": 70}
+        You respond: "現在の天気情報をお知らせします:\n\n- 天気: 晴れ ☀️\n- 気温: 70°F (約21°C)\n\n良い天気ですね！"
+
+        Never provide made-up information. Always use the tool to get real data.
       `,
-      model: bedrockModel,
+      model: selectedModel,
       tools: tools,
     });
   } catch (error) {

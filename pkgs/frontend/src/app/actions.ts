@@ -22,10 +22,11 @@ export async function testMCPConnection() {
 /**
  * x402のMCPサーバーを呼び出すメソッド（改善版）
  * @param prompt
+ * @param useGemini - trueの場合はGeminiモデルを使用（デフォルト: false）
  * @returns
  */
-export async function callx402Mcp(prompt: string) {
-  const agent = await mastra.getAgent("x402Agent");
+export async function callx402Mcp(prompt: string, useGemini = false) {
+  const agent = await mastra.getAgent("x402Agent", useGemini);
 
   try {
     console.log(`Calling agent with prompt: ${prompt}`);
@@ -100,6 +101,40 @@ export async function callx402Mcp(prompt: string) {
       for (const [key, value] of Object.entries(result)) {
         console.log(`${key}:`, typeof value, value);
       }
+    }
+
+    // 不完全なレスポンスの検出
+    const isIncomplete =
+      responseText.includes("<thinking>") &&
+      !responseText.includes("</thinking>");
+    const hasNoToolCalls =
+      stepsInfo.length === 0 ||
+      (stepsInfo.length > 0 &&
+        !stepsInfo.some((step) => {
+          if (typeof step !== "object" || step === null) return false;
+          const stepObj = step as Record<string, unknown>;
+          return (
+            "toolCalls" in stepObj &&
+            Array.isArray(stepObj.toolCalls) &&
+            stepObj.toolCalls.length > 0
+          );
+        }));
+
+    if (isIncomplete || hasNoToolCalls) {
+      console.warn("Detected incomplete or missing tool call response");
+      return {
+        text: "申し訳ございません。AIエージェントがツールを正しく呼び出せませんでした。\n\nこれはAmazon Nova Liteモデルの制限により発生する可能性があります。\n代替案として、MCPサーバーに直接接続するか、別のモデル（Gemini等）を使用することをお勧めします。",
+        steps: stepsInfo.length,
+        lastStepType: "incomplete",
+        rawResult: {
+          hasSteps: stepsInfo.length > 0,
+          stepsLength: stepsInfo.length,
+          hasText: !!responseText,
+          resultType: typeof result,
+          isIncomplete: true,
+          originalText: responseText,
+        },
+      };
     }
 
     const finalResult = {
