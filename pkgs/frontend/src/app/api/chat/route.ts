@@ -1,9 +1,9 @@
-import { randomBytes } from "node:crypto";
 import {
   BedrockAgentCoreClient,
   InvokeAgentRuntimeCommand,
 } from "@aws-sdk/client-bedrock-agentcore";
 import { NextResponse } from "next/server";
+import { randomBytes } from "node:crypto";
 
 /**
  * Chat API Route
@@ -11,7 +11,15 @@ import { NextResponse } from "next/server";
  */
 export async function POST(req: Request) {
   try {
-    const { city } = await req.json();
+    const body = await req.json();
+    const { city } = body;
+
+    if (!city || typeof city !== "string" || city.trim().length === 0) {
+      return NextResponse.json(
+        { error: "Invalid or missing 'city' parameter" },
+        { status: 400 },
+      );
+    }
 
     // 環境変数から AgentCore Runtime ARN を取得
     const agentRuntimeArn = process.env.AGENTCORE_RUNTIME_ARN;
@@ -63,8 +71,9 @@ export async function POST(req: Request) {
     let result;
     try {
       result = JSON.parse(textResponse);
-    } catch {
+    } catch (parseError) {
       // JSON形式でない場合はそのまま返す
+      console.warn("Failed to parse response as JSON:", parseError);
       result = { response: textResponse };
     }
 

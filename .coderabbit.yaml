@@ -39,21 +39,21 @@ reviews:
   suggested_labels: true
   labeling_instructions:
     - label: "bug"
-      instruction: "バグ修正"
+      instructions: "バグ修正"
     - label: "feature"
-      instruction: "新機能追加"
+      instructions: "新機能追加"
     - label: "refactor"
-      instruction: "リファクタリング"
+      instructions: "リファクタリング"
     - label: "docs"
-      instruction: "ドキュメント更新"
+      instructions: "ドキュメント更新"
     - label: "test"
-      instruction: "テスト追加・修正"
+      instructions: "テスト追加・修正"
     - label: "infra"
-      instruction: "インフラ・CDK変更"
+      instructions: "インフラ・CDK変更"
     - label: "security"
-      instruction: "セキュリティ対応"
+      instructions: "セキュリティ対応"
     - label: "performance"
-      instruction: "パフォーマンス改善"
+      instructions: "パフォーマンス改善"
   auto_apply_labels: true
 
   suggested_reviewers: true

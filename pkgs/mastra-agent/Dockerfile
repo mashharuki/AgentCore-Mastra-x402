@@ -74,7 +74,7 @@ EXPOSE 8080
 ENV PORT=8080
 ENV HOST=0.0.0.0
 ENV NODE_ENV=production
-# Use Bedrock models in production (not Gemini)
+# Use Bedrock models in production
 ENV USE_GEMINI=true
 # MCP_SERVER_URL will be set at runtime through container environment variables
 # or injected through a configuration mechanism

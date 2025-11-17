@@ -54,12 +54,27 @@ server.tool(
   "get-data-from-resource-server",
   "Get data from the resource server (in this example, the weather)",
   async () => {
-    // 環境変数で渡されたエンドポイントを指定してAPIを実行する
-    // ここでx402の支払い処理が自動的に行われる
-    const res = await client.get(endpointPath);
-    return {
-      content: [{ type: "text", text: JSON.stringify(res.data) }],
-    };
+    try {
+      // 環境変数で渡されたエンドポイントを指定してAPIを実行する
+      // ここでx402の支払い処理が自動的に行われる
+      const res = await client.get(endpointPath);
+      return {
+        content: [{ type: "text", text: JSON.stringify(res.data) }],
+      };
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      console.error("Failed to fetch data from resource server:", errorMessage);
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Error fetching data: ${errorMessage}`,
+          },
+        ],
+        isError: true,
+      };
+    }
   },
 );
 

@@ -1,10 +1,10 @@
 "use server";
 
-import { randomBytes } from "node:crypto";
 import {
   BedrockAgentCoreClient,
   InvokeAgentRuntimeCommand,
 } from "@aws-sdk/client-bedrock-agentcore";
+import { randomBytes } from "node:crypto";
 
 /**
  * AWS SDK を使用して AgentCore Runtime を呼び出す
@@ -27,7 +27,11 @@ export async function callx402Mcp(prompt: string, useGemini = false) {
     }
 
     console.log(`Calling AgentCore Runtime: ${agentRuntimeArn}`);
-    console.log(`Prompt: ${prompt}`);
+    // Previous code lines...
+
+    // Line 30 removed - no console.log for prompt
+
+    // Subsequent code lines...
     console.log(
       `Use Gemini: ${useGemini} (note: model is configured on AgentCore side)`,
     );
@@ -73,8 +77,12 @@ export async function callx402Mcp(prompt: string, useGemini = false) {
     };
     try {
       result = JSON.parse(textResponse);
-    } catch {
+    } catch (parseError) {
       // JSON形式でない場合はテキストとして扱う
+      console.warn(
+        "Failed to parse response as JSON, treating as plain text:",
+        parseError,
+      );
       result = { response: textResponse };
     }
 
@@ -109,11 +117,6 @@ export async function callx402Mcp(prompt: string, useGemini = false) {
     };
   } catch (error) {
     console.error("Error in callx402Mcp:", error);
-    return {
-      text: `エラーが発生しました: ${error instanceof Error ? error.message : "Unknown error"}`,
-      steps: 0,
-      lastStepType: "error",
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
+    throw error;
   }
 }
