@@ -223,6 +223,24 @@ pnpm cdk run destroy 'AgentCoreMastraX402Stack' --force
 - `agentcore-mastra-frontend`
 - `agentcore-mastra-agent`
 
+## CI パイプライン
+
+このプロジェクトでは、GitHub Actionsを使用したCIパイプラインを実装しています。
+
+### 自動化されたワークフロー
+
+#### 🔍 CI Pipeline
+- **実行タイミング**: プルリクエスト作成時、mainブランチへのマージ時
+- **実行内容**:
+  - コード品質チェック (Biome)
+  - TypeScript型チェック
+  - 全パッケージのビルド
+  - ユニットテスト
+  - Dockerイメージビルドテスト
+  - セキュリティ監査
+
+詳細は[`.github/workflows/ci.yml`](./.github/workflows/ci.yml)を参照してください。
+
 ## 各パッケージの詳細
 
 - **mastra-agent**: [README](./pkgs/mastra-agent/README.md)
