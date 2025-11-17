@@ -1,9 +1,9 @@
+import { randomBytes } from "node:crypto";
 import {
   BedrockAgentCoreClient,
   InvokeAgentRuntimeCommand,
 } from "@aws-sdk/client-bedrock-agentcore";
 import { NextResponse } from "next/server";
-import { randomBytes } from "node:crypto";
 
 /**
  * Chat API Route
