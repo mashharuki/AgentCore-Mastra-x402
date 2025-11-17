@@ -1,6 +1,3 @@
-import { execSync } from "node:child_process";
-import * as fs from "node:fs";
-import { join } from "node:path";
 import * as cdk from "aws-cdk-lib";
 import * as agentcore from "aws-cdk-lib/aws-bedrockagentcore";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
@@ -14,6 +11,9 @@ import * as logs from "aws-cdk-lib/aws-logs";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 import type { Construct } from "constructs";
 import * as dotenv from "dotenv";
+import { execSync } from "node:child_process";
+import * as fs from "node:fs";
+import { join } from "node:path";
 dotenv.config();
 
 const { FACILITATOR_URL, ADDRESS, NETWORK, ENDPOINT_PATH, PRIVATE_KEY } =
@@ -244,19 +244,22 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
     // Store Google Gemini API Key in SSM Parameter Store (SecureString)
     // Note: This should be set manually or via CDK context/secrets
     // For now, create a placeholder that needs to be updated manually
+    const geminiApiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+    if (!geminiApiKey || geminiApiKey === "PLACEHOLDER_UPDATE_MANUALLY") {
+      throw new Error(
+        "GOOGLE_GENERATIVE_AI_API_KEY environment variable must be set with a valid API key",
+      );
+    }
+
     const geminiApiKeyParameter = new ssm.StringParameter(
       this,
       "GeminiApiKeyParameter",
       {
         parameterName: "/agentcore/mastra/gemini-api-key",
-        stringValue:
-          process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
-          "PLACEHOLDER_UPDATE_MANUALLY",
+        stringValue: geminiApiKey,
         description:
           "Google Gemini API Key for Mastra Agent (SecureString recommended)",
-        tier: ssm.ParameterTier.STANDARD,
-        // Note: Using STANDARD for now. For production, consider using SecureString:
-        // type: ssm.ParameterType.SECURE_STRING,
+        type: ssm.ParameterType.SECURE_STRING,
       },
     );
 

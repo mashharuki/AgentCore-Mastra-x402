@@ -76,6 +76,8 @@ ENV HOST=0.0.0.0
 ENV NODE_ENV=production
 # Use Bedrock models in production
 ENV USE_GEMINI=true
+# Default AWS region (can be overridden at runtime)
+ENV AWS_REGION=ap-northeast-1
 # MCP_SERVER_URL will be set at runtime through container environment variables
 # or injected through a configuration mechanism
 
