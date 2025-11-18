@@ -248,3 +248,7 @@ pnpm cdk run destroy 'AgentCoreMastraX402Stack' --force
 - **x402server**: [README](./pkgs/x402server/README.md)
 - **frontend**: [README](./pkgs/frontend/README.md)
 - **cdk**: [README](./pkgs/cdk/README.md)
+
+## AgentCore Runtime サンドボックスでのテスト結果
+
+![](./docs/0.png)

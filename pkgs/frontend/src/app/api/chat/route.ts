@@ -52,7 +52,7 @@ export async function POST(req: Request) {
     const command = new InvokeAgentRuntimeCommand({
       runtimeSessionId,
       agentRuntimeArn,
-      qualifier: "DEFAULT",
+      qualifier: "MastraAgentRuntimeEndpoint",
       payload,
     });
 

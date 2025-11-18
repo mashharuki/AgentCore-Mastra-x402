@@ -257,9 +257,7 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
       {
         parameterName: "/agentcore/mastra/gemini-api-key",
         stringValue: geminiApiKey,
-        description:
-          "Google Gemini API Key for Mastra Agent (SecureString recommended)",
-        type: ssm.ParameterType.SECURE_STRING,
+        description: "Google Gemini API Key for Mastra Agent",
       },
     );
 
