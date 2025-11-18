@@ -14,8 +14,9 @@ import { randomBytes } from "node:crypto";
  */
 export async function callx402Mcp(prompt: string, useGemini = false) {
   try {
-    // 環境変数から AgentCore Runtime ARN を取得
+    // 環境変数から AgentCore Runtime ARN とqualifierを取得
     const agentRuntimeArn = process.env.AGENTCORE_RUNTIME_ARN;
+    const qualifier = process.env.AGENTCORE_RUNTIME_QUALIFIER;
     const region = process.env.AWS_REGION || "ap-northeast-1";
 
     if (!agentRuntimeArn) {
@@ -27,29 +28,18 @@ export async function callx402Mcp(prompt: string, useGemini = false) {
     }
 
     console.log(`Calling AgentCore Runtime: ${agentRuntimeArn}`);
+    console.log(`Qualifier: ${qualifier || "none"}`);
     console.log(
       `Use Gemini: ${useGemini} (note: model is configured on AgentCore side)`,
     );
 
-    // エンドポイントARNからランタイムARNとqualifierを抽出
-    // 形式: arn:aws:bedrock-agentcore:region:account:runtime/{runtime-id}/runtime-endpoint/{endpoint-name}
-    // 必要な形式: agentRuntimeArn = arn:aws:bedrock-agentcore:region:account:runtime/{runtime-id}
-    //            qualifier = {endpoint-name}
-    let runtimeArn: string;
-    let qualifier: string;
+    const runtimeArn = agentRuntimeArn;
 
-    if (agentRuntimeArn.includes("/runtime-endpoint/")) {
-      // エンドポイントARNの場合、分解する
-      const parts = agentRuntimeArn.split("/runtime-endpoint/");
-      runtimeArn = parts[0];
-      qualifier = parts[1];
-      console.log("Parsed endpoint ARN:", { runtimeArn, qualifier });
-    } else {
-      // 既にランタイムARNの場合
-      runtimeArn = agentRuntimeArn;
-      qualifier = "DEFAULT";
-      console.log("Using runtime ARN with DEFAULT qualifier");
-    }
+    console.log("Runtime configuration:", {
+      runtimeArn,
+      qualifier,
+      useQualifier: !!qualifier,
+    });
 
     // BedrockAgentCore クライアントを初期化
     const client = new BedrockAgentCoreClient({
@@ -75,12 +65,23 @@ export async function callx402Mcp(prompt: string, useGemini = false) {
     });
 
     // InvokeAgentRuntimeCommand を実行
-    const command = new InvokeAgentRuntimeCommand({
+    // qualifierが設定されている場合のみ含める
+    const commandParams: {
+      runtimeSessionId: string;
+      agentRuntimeArn: string;
+      qualifier?: string;
+      payload: Uint8Array;
+    } = {
       runtimeSessionId,
       agentRuntimeArn: runtimeArn,
-      qualifier: qualifier,
       payload,
-    });
+    };
+
+    if (qualifier) {
+      commandParams.qualifier = qualifier;
+    }
+
+    const command = new InvokeAgentRuntimeCommand(commandParams);
 
     console.log("Sending command to AgentCore Runtime...");
     const response = await client.send(command);
@@ -144,6 +145,25 @@ export async function callx402Mcp(prompt: string, useGemini = false) {
     };
   } catch (error) {
     console.error("Error in callx402Mcp:", error);
-    throw error;
+    // エラーの詳細情報をログ出力
+    if (error instanceof Error) {
+      console.error("Error name:", error.name);
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+    }
+
+    // エラーを構造化して返す（クライアントにもエラー情報を送る）
+    return {
+      text: `エラーが発生しました: ${error instanceof Error ? error.message : String(error)}`,
+      error: error instanceof Error ? error.message : String(error),
+      errorDetails:
+        error instanceof Error
+          ? {
+              name: error.name,
+              message: error.message,
+              stack: error.stack,
+            }
+          : undefined,
+    };
   }
 }

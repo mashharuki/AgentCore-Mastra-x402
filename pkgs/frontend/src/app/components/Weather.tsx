@@ -14,6 +14,15 @@ interface WeatherData {
     hasText: boolean;
   };
   error?: string;
+  errorDetails?: {
+    name: string;
+    message: string;
+    stack?: string;
+  };
+  metadata?: {
+    model?: string;
+    tokens?: number;
+  };
 }
 
 export function Weather() {
@@ -24,15 +33,44 @@ export function Weather() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
+    setWeatherData(null); // 前回の結果をクリア
     try {
       const formData = new FormData(event.currentTarget);
       const prompt = formData.get("prompt") as string;
+
+      if (!prompt || prompt.trim() === "") {
+        setWeatherData({
+          text: "プロンプトを入力してください",
+          error: "Empty prompt",
+        });
+        return;
+      }
+
+      console.log("Submitting prompt:", prompt);
+
       // AI Agent越しにx402の機能を呼び出す
       const result = await callx402Mcp(prompt, useGemini);
+      console.log("Result received:", result);
       setWeatherData(result);
-      console.log(result);
+
+      // エラーがある場合は追加でログ出力
+      if (result.error) {
+        console.error("Server returned error:", result.error);
+        if (result.errorDetails) {
+          console.error("Error details:", result.errorDetails);
+        }
+      }
     } catch (error) {
       console.error("Error fetching weather data:", error);
+      // エラーメッセージを詳細に表示
+      const errorMessage =
+        error instanceof Error
+          ? `${error.name}: ${error.message}`
+          : String(error);
+      setWeatherData({
+        text: `クライアントエラー: ${errorMessage}`,
+        error: errorMessage,
+      });
     } finally {
       setLoading(false);
     }
