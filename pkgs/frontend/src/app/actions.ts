@@ -27,31 +27,58 @@ export async function callx402Mcp(prompt: string, useGemini = false) {
     }
 
     console.log(`Calling AgentCore Runtime: ${agentRuntimeArn}`);
-    // Previous code lines...
-
-    // Line 30 removed - no console.log for prompt
-
-    // Subsequent code lines...
     console.log(
       `Use Gemini: ${useGemini} (note: model is configured on AgentCore side)`,
     );
+
+    // エンドポイントARNからランタイムARNとqualifierを抽出
+    // 形式: arn:aws:bedrock-agentcore:region:account:runtime/{runtime-id}/runtime-endpoint/{endpoint-name}
+    // 必要な形式: agentRuntimeArn = arn:aws:bedrock-agentcore:region:account:runtime/{runtime-id}
+    //            qualifier = {endpoint-name}
+    let runtimeArn: string;
+    let qualifier: string;
+
+    if (agentRuntimeArn.includes("/runtime-endpoint/")) {
+      // エンドポイントARNの場合、分解する
+      const parts = agentRuntimeArn.split("/runtime-endpoint/");
+      runtimeArn = parts[0];
+      qualifier = parts[1];
+      console.log("Parsed endpoint ARN:", { runtimeArn, qualifier });
+    } else {
+      // 既にランタイムARNの場合
+      runtimeArn = agentRuntimeArn;
+      qualifier = "DEFAULT";
+      console.log("Using runtime ARN with DEFAULT qualifier");
+    }
 
     // BedrockAgentCore クライアントを初期化
     const client = new BedrockAgentCoreClient({
       region,
     });
 
-    // プロンプトをバイナリ形式に変換
-    const payload = new TextEncoder().encode(prompt);
+    // プロンプトを直接バイナリに変換
+    // AgentCore Runtimeはペイロードをそのままエージェントに転送する
+    // エージェント側でJSON解析を行う
+    const requestBody = JSON.stringify({
+      prompt: prompt,
+    });
+    const payload = new TextEncoder().encode(requestBody);
 
     // 33文字以上のランダムなセッションIDを生成
     const runtimeSessionId = `session-${randomBytes(16).toString("hex")}`;
 
+    console.log("Request details:", {
+      runtimeArn,
+      qualifier,
+      runtimeSessionId,
+      payloadSize: payload.length,
+    });
+
     // InvokeAgentRuntimeCommand を実行
     const command = new InvokeAgentRuntimeCommand({
       runtimeSessionId,
-      agentRuntimeArn,
-      qualifier: "DEFAULT",
+      agentRuntimeArn: runtimeArn,
+      qualifier: qualifier,
       payload,
     });
 

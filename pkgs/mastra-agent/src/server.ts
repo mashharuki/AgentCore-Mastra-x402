@@ -140,8 +140,11 @@ console.log("- RESOURCE_SERVER_URL:", process.env.RESOURCE_SERVER_URL);
 console.log("- ENDPOINT_PATH:", process.env.ENDPOINT_PATH);
 console.log("- AWS_REGION:", process.env.AWS_REGION);
 
-// JSON parsing middleware
+// JSON parsing middleware with raw body support for AgentCore Runtime
 app.use(express.json({ limit: "100mb" }));
+// Also support raw body parsing for binary payloads from AgentCore Runtime
+app.use(express.raw({ type: "application/octet-stream", limit: "100mb" }));
+app.use(express.text({ type: "text/plain", limit: "100mb" }));
 
 // Logging middleware
 app.use((req, _res, next) => {
@@ -212,12 +215,64 @@ app.post("/invocations", async (req: Request, res: Response) => {
       });
     }
 
+    // Log raw request for debugging
+    console.log("Content-Type:", req.headers["content-type"]);
+    console.log("Request body type:", typeof req.body);
+    console.log(
+      "Request body:",
+      req.body instanceof Buffer
+        ? `Buffer(${req.body.length} bytes)`
+        : JSON.stringify(req.body, null, 2),
+    );
+
     // Validate request body
-    const { prompt } = req.body;
+    // AgentCore Runtime sends the payload as binary/JSON, so we need to handle both formats
+    let prompt: string | undefined;
+    let requestData: { prompt?: string; modelId?: string };
+
+    // Handle Buffer (binary payload from AgentCore Runtime)
+    if (req.body instanceof Buffer) {
+      try {
+        const textData = req.body.toString("utf-8");
+        console.log("Decoded buffer:", textData);
+        requestData = JSON.parse(textData);
+      } catch (parseError) {
+        // If JSON parsing fails, treat entire buffer as the prompt
+        console.warn("Failed to parse buffer as JSON:", parseError);
+        prompt = req.body.toString("utf-8");
+        requestData = { prompt };
+      }
+    } else if (typeof req.body === "string") {
+      // If body is a string, try to parse it
+      try {
+        requestData = JSON.parse(req.body);
+      } catch {
+        // If parsing fails, treat the entire body as the prompt
+        prompt = req.body;
+        requestData = { prompt };
+      }
+    } else if (typeof req.body === "object" && req.body !== null) {
+      // Standard JSON object
+      requestData = req.body;
+    } else {
+      return res.status(400).json({
+        error: "Invalid request",
+        details:
+          "Request body must be a string, Buffer, or contain a 'prompt' string field",
+        receivedBody: typeof req.body,
+      });
+    }
+
+    // Extract prompt from requestData
+    if (!prompt) {
+      prompt = requestData.prompt || "";
+    }
+
     if (!prompt || typeof prompt !== "string") {
       return res.status(400).json({
         error: "Invalid request",
-        details: "Request body must contain a 'prompt' string field",
+        details: "Request must contain a valid 'prompt' string field",
+        receivedData: requestData,
       });
     }
 

@@ -499,9 +499,10 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
               PORT: "3000",
               NODE_ENV: "production",
               AWS_REGION: this.region,
-              // AgentCore Runtime の完全なエンドポイントARN
-              // 形式: arn:aws:bedrock-agentcore:{region}:{account}:runtime/{runtime-id}/runtime-endpoint/DEFAULT
-              AGENTCORE_RUNTIME_ARN: `${agentCoreRuntime.attrAgentRuntimeArn}/runtime-endpoint/DEFAULT`,
+              // AgentCore Runtime Endpoint ARN (正しいエンドポイントARNを使用)
+              // CfnRuntimeEndpointから取得した正式なARN
+              AGENTCORE_RUNTIME_ARN:
+                agentCoreEndpoint.attrAgentRuntimeEndpointArn,
             },
             logDriver: ecs.LogDrivers.awsLogs({
               streamPrefix: "agentcore-frontend",
