@@ -17,7 +17,8 @@ WORKDIR /app
 COPY package.json ./
 
 # Install dependencies (without lockfile for monorepo compatibility)
-RUN pnpm install --no-lockfile
+# Use --shamefully-hoist to reduce duplication
+RUN pnpm install --no-lockfile --shamefully-hoist
 
 # ------------------------------------------------------------------------------
 # Stage 2: Builder
@@ -56,10 +57,18 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 agentuser
 
+# Copy package.json and install ONLY production dependencies
+COPY --from=builder /app/package.json ./package.json
+
+# Install pnpm for production install
+RUN corepack enable && corepack prepare pnpm@10.7.0 --activate
+
+# Install only production dependencies
+RUN pnpm install --prod --no-lockfile --shamefully-hoist && \
+    pnpm store prune
+
 # Copy built application
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
 
 # Set proper ownership
 RUN chown -R agentuser:nodejs /app

@@ -1,30 +1,75 @@
-# Use Node.js 20 as the base image with platform specification
-FROM --platform=linux/amd64 node:20-slim
+# ==============================================================================
+# Multi-stage Dockerfile for x402 Backend Server
+# Optimized for minimal production size
+# ==============================================================================
 
-# Set working directory
-WORKDIR /app
-
-# Copy package.json and pnpm-lock.yaml
-COPY package.json ./
-COPY pnpm-lock.yaml ./
+# ------------------------------------------------------------------------------
+# Stage 1: Dependencies
+# ------------------------------------------------------------------------------
+FROM --platform=linux/amd64 node:20-alpine AS deps
 
 # Install pnpm
-RUN npm install -g pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Install dependencies
-RUN pnpm install 
+WORKDIR /app
 
-# Install @types/node for TypeScript compilation
-RUN pnpm add -D @types/node
+# Copy package files
+COPY package.json pnpm-lock.yaml* ./
 
-# Copy the rest of the code
+# Install all dependencies (including dev dependencies needed for build)
+RUN pnpm install --frozen-lockfile
+
+# ------------------------------------------------------------------------------
+# Stage 2: Builder
+# ------------------------------------------------------------------------------
+FROM --platform=linux/amd64 node:20-alpine AS builder
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+WORKDIR /app
+
+# Copy dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copy source code
 COPY . .
 
-# Build the application
+# Build TypeScript
+ENV NODE_ENV=production
 RUN pnpm run build
 
-# Expose the port the app runs on
+# ------------------------------------------------------------------------------
+# Stage 3: Runner - Production runtime
+# ------------------------------------------------------------------------------
+FROM --platform=linux/amd64 node:20-alpine AS runner
+
+# Install dumb-init for proper signal handling
+RUN apk add --no-cache dumb-init
+
+WORKDIR /app
+
+# Copy only production dependencies
+COPY --from=deps /app/package.json ./
+RUN corepack enable && corepack prepare pnpm@latest --activate && \
+    pnpm install --prod --frozen-lockfile && \
+    pnpm store prune
+
+# Copy built application
+COPY --from=builder /app/dist ./dist
+
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001 && \
+    chown -R nodejs:nodejs /app
+
+USER nodejs
+
+# Expose port
 EXPOSE 4021
 
-# Command to run the application
-CMD ["node", "--experimental-modules", "--es-module-specifier-resolution=node", "./dist/index.js"]
+# Use dumb-init to handle signals properly
+ENTRYPOINT ["dumb-init", "--"]
+
+# Run the application
+CMD ["node", "dist/index.js"]
