@@ -25,11 +25,20 @@ interface WeatherData {
   };
 }
 
+/**
+ * Weather Component
+ * @returns
+ */
 export function Weather() {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(false);
   const [useGemini, setUseGemini] = useState(true); // デフォルトでGeminiを使用
 
+  /**
+   * ボタンを押した時の処理
+   * @param event
+   * @returns
+   */
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);

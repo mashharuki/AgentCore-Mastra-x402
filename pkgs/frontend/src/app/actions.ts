@@ -14,7 +14,7 @@ import { randomBytes } from "node:crypto";
  */
 export async function callx402Mcp(prompt: string, useGemini = false) {
   try {
-    // 環境変数から AgentCore Runtime ARN とqualifierを取得
+    // 環境変数から AgentCore Runtime ARN とqualifier(エンドポイント名)を取得
     const agentRuntimeArn = process.env.AGENTCORE_RUNTIME_ARN;
     const qualifier = process.env.AGENTCORE_RUNTIME_QUALIFIER;
     const region = process.env.AWS_REGION || "ap-northeast-1";
@@ -66,6 +66,7 @@ export async function callx402Mcp(prompt: string, useGemini = false) {
 
     // InvokeAgentRuntimeCommand を実行
     // qualifierが設定されている場合のみ含める
+    // Runtime ID、Runtime ARN、エンドポイント名、ペイロードの4つが必要
     const commandParams: {
       runtimeSessionId: string;
       agentRuntimeArn: string;
