@@ -1,10 +1,14 @@
 import * as cdk from "aws-cdk-lib";
+import * as agentcore from "aws-cdk-lib/aws-bedrockagentcore";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as ecr from "aws-cdk-lib/aws-ecr";
+import * as ecr_assets from "aws-cdk-lib/aws-ecr-assets";
 import * as ecs from "aws-cdk-lib/aws-ecs";
 import * as ecsPatterns from "aws-cdk-lib/aws-ecs-patterns";
+import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as logs from "aws-cdk-lib/aws-logs";
+import * as ssm from "aws-cdk-lib/aws-ssm";
 import type { Construct } from "constructs";
 import * as dotenv from "dotenv";
 import { execSync } from "node:child_process";
@@ -35,7 +39,7 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
     super(scope, id, props);
 
     // Create VPC for Fargate service
-    const vpc = new ec2.Vpc(this, "X402Vpc", {
+    const vpc = new ec2.Vpc(this, "AgentCoreMastraX402Vpc", {
       maxAzs: 2,
       natGateways: 1,
     });
@@ -47,12 +51,12 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
     // Create ECR repository reference (assuming it already exists)
     const backendRepo = ecr.Repository.fromRepositoryName(
       this,
-      "BackendRepo",
+      "AgentCoreMastraX402BackendRepo",
       "x402-backend-api",
     );
 
     // Create ECS cluster
-    const cluster = new ecs.Cluster(this, "X402Cluster", {
+    const cluster = new ecs.Cluster(this, "AgentCoreMastraX402Cluster", {
       vpc,
       clusterName: "x402-cluster",
     });
@@ -61,7 +65,7 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
     const backendService =
       new ecsPatterns.ApplicationLoadBalancedFargateService(
         this,
-        "BackendService",
+        "AgentCoreMastraX402BackendService",
         {
           cluster,
           serviceName: "x402-backend-api",
@@ -81,11 +85,15 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
             },
             logDriver: ecs.LogDrivers.awsLogs({
               streamPrefix: "x402-backend",
-              logGroup: new logs.LogGroup(this, "BackendLogGroup", {
-                logGroupName: "/aws/ecs/x402-backend",
-                retention: logs.RetentionDays.ONE_WEEK,
-                removalPolicy: cdk.RemovalPolicy.DESTROY,
-              }),
+              logGroup: new logs.LogGroup(
+                this,
+                "AgentCoreMastraX402BackendLogGroup",
+                {
+                  logGroupName: "/aws/ecs/x402-backend",
+                  retention: logs.RetentionDays.ONE_WEEK,
+                  removalPolicy: cdk.RemovalPolicy.DESTROY,
+                },
+              ),
             }),
           },
           publicLoadBalancer: true,
@@ -111,7 +119,7 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
     // Create Lambda function for MCP server (force rebuild v3 - bundle.js fix)
     const mcpLambdaFunction = new lambda.Function(
       this,
-      "x402WalrusMCPServerFunction",
+      "AgentCoreMastraX402MCPServerFunction",
       {
         runtime: lambda.Runtime.NODEJS_22_X,
         code: lambda.Code.fromAsset(join(__dirname, "../../mcp"), {
@@ -127,102 +135,44 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
                     `Building MCP Lambda from: ${sourceDir} to: ${outputDir}`,
                   );
 
-                  // Copy necessary files (not node_modules)
-                  const filesToCopy = [
-                    "src",
-                    "package.json",
-                    "tsconfig.json",
-                    "esbuild.js",
-                    "bundle.js",
-                    "run.sh",
-                  ];
+                  // Check if bundle.js exists in source directory
+                  const sourceBundlePath = join(sourceDir, "bundle.js");
+                  if (!fs.existsSync(sourceBundlePath)) {
+                    console.error(
+                      "bundle.js not found in source directory. Please run 'pnpm mcp build' first.",
+                    );
+                    throw new Error(
+                      "bundle.js not found. Run 'pnpm mcp build' before deploying.",
+                    );
+                  }
+
+                  // Copy only necessary files for Lambda deployment
+                  const filesToCopy = ["bundle.js", "run.sh"];
 
                   for (const file of filesToCopy) {
                     const srcPath = join(sourceDir, file);
                     const destPath = join(outputDir, file);
                     if (fs.existsSync(srcPath)) {
-                      execSync(`cp -r ${srcPath} ${destPath}`, {
+                      console.log(`Copying: ${file}`);
+                      execSync(`cp ${srcPath} ${destPath}`, {
                         stdio: "inherit",
                       });
-                    }
-                  }
-
-                  // Install dependencies
-                  console.log("Installing dependencies...");
-                  try {
-                    execSync("npm install --no-package-lock --no-save", {
-                      cwd: outputDir,
-                      stdio: "inherit",
-                    });
-                  } catch (error) {
-                    console.warn("npm install failed, trying with --force");
-                    execSync(
-                      "npm install --no-package-lock --no-save --force",
-                      {
-                        cwd: outputDir,
-                        stdio: "inherit",
-                      },
-                    );
-                  }
-
-                  // Build the project (tsc + esbuild)
-                  console.log("Building project...");
-                  execSync("npm run build", {
-                    cwd: outputDir,
-                    stdio: "inherit",
-                  });
-
-                  // Verify bundle.js exists before cleanup
-                  const bundlePathBeforeCleanup = join(outputDir, "bundle.js");
-                  console.log(
-                    `Checking for bundle.js before cleanup: ${bundlePathBeforeCleanup}`,
-                  );
-                  if (!fs.existsSync(bundlePathBeforeCleanup)) {
-                    console.error("bundle.js was not created by build process");
-                    // List all files to debug
-                    execSync(`find ${outputDir} -name "*.js" -type f`, {
-                      stdio: "inherit",
-                    });
-                    throw new Error(
-                      "bundle.js was not created by build process",
-                    );
-                  }
-
-                  // Clean up files not needed in Lambda (but keep bundle.js and run.sh)
-                  console.log("Cleaning up files...");
-                  const filesToRemove = [
-                    "package.json",
-                    "node_modules",
-                    "tsconfig.json",
-                    "src",
-                    "esbuild.js",
-                    "dist", // distフォルダも削除（bundle.jsがあるので不要）
-                  ];
-
-                  for (const file of filesToRemove) {
-                    const filePath = join(outputDir, file);
-                    if (fs.existsSync(filePath)) {
-                      console.log(`Removing: ${filePath}`);
-                      execSync(`rm -rf ${filePath}`, { stdio: "inherit" });
+                    } else {
+                      throw new Error(`Required file not found: ${file}`);
                     }
                   }
 
                   // Make run.sh executable
                   const runShPath = join(outputDir, "run.sh");
-                  if (fs.existsSync(runShPath)) {
-                    execSync(`chmod +x ${runShPath}`, {
-                      stdio: "inherit",
-                    });
-                  }
+                  execSync(`chmod +x ${runShPath}`, {
+                    stdio: "inherit",
+                  });
 
-                  // Verify bundle.js still exists after cleanup
+                  // Verify bundle.js exists
                   const bundlePath = join(outputDir, "bundle.js");
                   if (!fs.existsSync(bundlePath)) {
-                    throw new Error("bundle.js was removed during cleanup");
+                    throw new Error("bundle.js was not copied successfully");
                   }
-                  console.log(
-                    `Bundle file exists after cleanup: ${bundlePath}`,
-                  );
 
                   // Get bundle.js file size
                   const bundleStats = fs.statSync(bundlePath);
@@ -278,21 +228,384 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
       },
     });
 
+    // Store MCP Server URL in SSM Parameter Store for runtime access
+    const mcpServerUrlParameter = new ssm.StringParameter(
+      this,
+      "McpServerUrlParameter",
+      {
+        parameterName: "/agentcore/mastra/mcp-server-url",
+        stringValue: mcpFunctionUrl.url,
+        description:
+          "MCP Server Function URL for Mastra Agent runtime configuration",
+        tier: ssm.ParameterTier.STANDARD,
+      },
+    );
+
+    // Store Google Gemini API Key in SSM Parameter Store (SecureString)
+    // Note: This should be set manually or via CDK context/secrets
+    // For now, create a placeholder that needs to be updated manually
+    const geminiApiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+    if (!geminiApiKey || geminiApiKey === "PLACEHOLDER_UPDATE_MANUALLY") {
+      throw new Error(
+        "GOOGLE_GENERATIVE_AI_API_KEY environment variable must be set with a valid API key",
+      );
+    }
+
+    const geminiApiKeyParameter = new ssm.StringParameter(
+      this,
+      "GeminiApiKeyParameter",
+      {
+        parameterName: "/agentcore/mastra/gemini-api-key",
+        stringValue: geminiApiKey,
+        description: "Google Gemini API Key for Mastra Agent",
+      },
+    );
+
+    // ===========================================================================
+    // Amazon Bedrock AgentCore Runtime (正式なCfnRuntimeリソース)
+    //　===========================================================================
+
+    // Build Docker image for AgentCore Runtime using ECR Assets
+    // Note: Environment variables like MCP_SERVER_URL must be set at runtime
+    // since they contain CDK tokens that are resolved during deployment
+    const agentCoreDockerImage = new ecr_assets.DockerImageAsset(
+      this,
+      "AgentCoreDockerImage",
+      {
+        directory: join(__dirname, "../../mastra-agent"),
+        file: "Dockerfile",
+        platform: ecr_assets.Platform.LINUX_ARM64, // ARM64 for cost optimization
+      },
+    );
+
+    // Create IAM role for AgentCore Runtime
+    const agentCoreRole = new iam.Role(this, "BedrockAgentCoreRole", {
+      assumedBy: new iam.ServicePrincipal("bedrock-agentcore.amazonaws.com"),
+      description: "IAM role for Bedrock AgentCore Runtime",
+    });
+
+    const region = cdk.Stack.of(this).region;
+    const accountId = cdk.Stack.of(this).account;
+
+    // ECR permissions
+    agentCoreRole.addToPolicy(
+      new iam.PolicyStatement({
+        sid: "ECRImageAccess",
+        effect: iam.Effect.ALLOW,
+        actions: ["ecr:BatchGetImage", "ecr:GetDownloadUrlForLayer"],
+        resources: [`arn:aws:ecr:${region}:${accountId}:repository/*`],
+      }),
+    );
+
+    agentCoreRole.addToPolicy(
+      new iam.PolicyStatement({
+        sid: "ECRTokenAccess",
+        effect: iam.Effect.ALLOW,
+        actions: ["ecr:GetAuthorizationToken"],
+        resources: ["*"],
+      }),
+    );
+
+    // CloudWatch Logs permissions
+    agentCoreRole.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ["logs:DescribeLogStreams", "logs:CreateLogGroup"],
+        resources: [
+          `arn:aws:logs:${region}:${accountId}:log-group:/aws/bedrock-agentcore/runtimes/*`,
+        ],
+      }),
+    );
+
+    agentCoreRole.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ["logs:DescribeLogGroups"],
+        resources: [`arn:aws:logs:${region}:${accountId}:log-group:*`],
+      }),
+    );
+
+    agentCoreRole.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ["logs:CreateLogStream", "logs:PutLogEvents"],
+        resources: [
+          `arn:aws:logs:${region}:${accountId}:log-group:/aws/bedrock-agentcore/runtimes/*:log-stream:*`,
+        ],
+      }),
+    );
+
+    // X-Ray and CloudWatch Metrics permissions
+    agentCoreRole.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          "xray:PutTraceSegments",
+          "xray:PutTelemetryRecords",
+          "xray:GetSamplingRules",
+          "xray:GetSamplingTargets",
+        ],
+        resources: ["*"],
+      }),
+    );
+
+    agentCoreRole.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ["cloudwatch:PutMetricData"],
+        resources: ["*"],
+        conditions: {
+          StringEquals: {
+            "cloudwatch:namespace": "bedrock-agentcore",
+          },
+        },
+      }),
+    );
+
+    // Bedrock model invocation permissions
+    agentCoreRole.addToPolicy(
+      new iam.PolicyStatement({
+        sid: "BedrockModelInvocation",
+        effect: iam.Effect.ALLOW,
+        actions: [
+          "bedrock:InvokeModel",
+          "bedrock:InvokeModelWithResponseStream",
+        ],
+        resources: [
+          "arn:aws:bedrock:*::foundation-model/*",
+          `arn:aws:bedrock:${region}:${accountId}:*`,
+        ],
+      }),
+    );
+
+    // AgentCore workload identity permissions
+    agentCoreRole.addToPolicy(
+      new iam.PolicyStatement({
+        sid: "GetAgentAccessToken",
+        effect: iam.Effect.ALLOW,
+        actions: [
+          "bedrock-agentcore:GetWorkloadAccessToken",
+          "bedrock-agentcore:GetWorkloadAccessTokenForJWT",
+          "bedrock-agentcore:GetWorkloadAccessTokenForUserId",
+        ],
+        resources: [
+          `arn:aws:bedrock-agentcore:${region}:${accountId}:workload-identity-directory/default`,
+          `arn:aws:bedrock-agentcore:${region}:${accountId}:workload-identity-directory/default/workload-identity/agentName-*`,
+        ],
+      }),
+    );
+
+    // SSM Parameter Store read permissions for runtime configuration
+    // Grant explicit read access to configuration parameters
+    agentCoreRole.addToPolicy(
+      new iam.PolicyStatement({
+        sid: "ReadSSMParameters",
+        effect: iam.Effect.ALLOW,
+        actions: [
+          "ssm:GetParameter",
+          "ssm:GetParameters",
+          "ssm:GetParametersByPath",
+        ],
+        resources: [
+          // Specific parameters
+          mcpServerUrlParameter.parameterArn,
+          geminiApiKeyParameter.parameterArn,
+          // Wildcard for all parameters under this path
+          `arn:aws:ssm:${region}:${accountId}:parameter/agentcore/mastra/*`,
+        ],
+      }),
+    );
+
+    // Also grant read access via the Parameter resource directly
+    mcpServerUrlParameter.grantRead(agentCoreRole);
+    geminiApiKeyParameter.grantRead(agentCoreRole);
+
+    // Create AgentCore Runtime
+    // Note: CfnRuntime does not support direct environment variable configuration
+    // The mastra-agent must:
+    // 1. Use default/placeholder values for MCP_SERVER_URL during build
+    // 2. Allow runtime configuration through external mechanisms (e.g., Parameter Store, Secrets Manager)
+    // 3. Or implement a configuration service that reads from AWS resources
+    //
+    // For now, the MCP_SERVER_URL can be:
+    // - Hardcoded if known in advance
+    // - Retrieved from Parameter Store at container startup
+    // - Passed through a custom runtime configuration endpoint
+    //
+    // The Dockerfile sets:
+    // - PORT=8080 (required by AgentCore)
+    // - NODE_ENV=production
+    // - USE_GEMINI=true (for Bedrock models)
+    const agentCoreRuntime = new agentcore.CfnRuntime(
+      this,
+      "MastraAgentCoreRuntime",
+      {
+        agentRuntimeName: "MastraAgentRuntime",
+        agentRuntimeArtifact: {
+          containerConfiguration: {
+            containerUri: agentCoreDockerImage.imageUri,
+          },
+        },
+        networkConfiguration: {
+          networkMode: "PUBLIC",
+        },
+        roleArn: agentCoreRole.roleArn,
+        protocolConfiguration: "HTTP",
+      },
+    );
+
+    // Ensure proper dependency chain: Parameters -> Role -> Runtime
+    agentCoreRuntime.node.addDependency(agentCoreRole);
+    agentCoreRuntime.node.addDependency(mcpServerUrlParameter);
+    agentCoreRuntime.node.addDependency(geminiApiKeyParameter);
+
+    // Create AgentCore Runtime Endpoint
+    const agentCoreEndpoint = new agentcore.CfnRuntimeEndpoint(
+      this,
+      "MastraAgentCoreEndpoint",
+      {
+        agentRuntimeId: agentCoreRuntime.attrAgentRuntimeId,
+        agentRuntimeVersion: agentCoreRuntime.attrAgentRuntimeVersion,
+        name: "MastraAgentRuntimeEndpoint",
+      },
+    );
+
+    // ===========================================================================
+    // Fargateで Next.js Frontend をデプロイ
+    //　===========================================================================
+
+    // Create ECR repository reference for Frontend
+    const frontendRepo = ecr.Repository.fromRepositoryName(
+      this,
+      "AgentCoreMastraFrontendRepo",
+      "agentcore-mastra-frontend",
+    );
+
+    // Create Fargate service for Frontend
+    const frontendService =
+      new ecsPatterns.ApplicationLoadBalancedFargateService(
+        this,
+        "AgentCoreMastraFrontendService",
+        {
+          cluster,
+          serviceName: "agentcore-frontend",
+          cpu: 512,
+          memoryLimitMiB: 1024,
+          desiredCount: 1,
+          taskImageOptions: {
+            image: ecs.ContainerImage.fromEcrRepository(frontendRepo, "latest"),
+            containerPort: 3000,
+            environment: {
+              PORT: "3000",
+              NODE_ENV: "production",
+              AWS_REGION: this.region,
+              // AgentCore Runtime Endpoint ARN (正しいエンドポイントARNを使用)
+              // CfnRuntimeEndpointから取得した正式なARN
+              AGENTCORE_RUNTIME_ARN: agentCoreEndpoint.attrAgentRuntimeArn,
+              AGENTCORE_RUNTIME_QUALIFIER: "MastraAgentRuntimeEndpoint",
+            },
+            logDriver: ecs.LogDrivers.awsLogs({
+              streamPrefix: "agentcore-frontend",
+              logGroup: new logs.LogGroup(
+                this,
+                "AgentCoreMastraFrontendLogGroup",
+                {
+                  logGroupName: "/aws/ecs/agentcore-frontend",
+                  retention: logs.RetentionDays.ONE_WEEK,
+                  removalPolicy: cdk.RemovalPolicy.DESTROY,
+                },
+              ),
+            }),
+          },
+          publicLoadBalancer: true,
+          assignPublicIp: true,
+          healthCheckGracePeriod: cdk.Duration.seconds(300),
+        },
+      );
+
+    // Configure health check for Frontend
+    frontendService.targetGroup.configureHealthCheck({
+      path: "/api/health",
+      healthyHttpCodes: "200",
+      interval: cdk.Duration.seconds(30),
+      timeout: cdk.Duration.seconds(5),
+      healthyThresholdCount: 2,
+      unhealthyThresholdCount: 5,
+    });
+
+    // Grant Frontend task role permission to invoke AgentCore Runtime
+    frontendService.taskDefinition.taskRole.addToPrincipalPolicy(
+      new iam.PolicyStatement({
+        sid: "InvokeAgentCoreRuntime",
+        effect: iam.Effect.ALLOW,
+        actions: [
+          "bedrock-agentcore:InvokeAgentRuntime",
+          "bedrock-agentcore:InvokeAgentRuntimeWithResponseStream",
+        ],
+        resources: [
+          agentCoreRuntime.attrAgentRuntimeArn,
+          `${agentCoreRuntime.attrAgentRuntimeArn}/*`,
+        ],
+      }),
+    );
+
     // ===========================================================================
     // 成果物
     //　===========================================================================
 
-    new cdk.CfnOutput(this, "BackendApiUrl", {
+    new cdk.CfnOutput(this, "AgentCoreMastraX402BackendApiUrl", {
       value: `http://${backendService.loadBalancer.loadBalancerDnsName}`,
-      description: "Backend API Load Balancer URL",
+      description: "x402 Backend API Load Balancer URL",
     });
 
-    new cdk.CfnOutput(this, "MCPServerUrl", {
+    new cdk.CfnOutput(this, "AgentCoreMastraX402MCPServerUrl", {
       value: mcpFunctionUrl.url,
       description: "MCP Server Function URL",
     });
 
-    new cdk.CfnOutput(this, "VpcId", {
+    new cdk.CfnOutput(this, "AgentCoreMastraX402MCPServerUrlParameter", {
+      value: mcpServerUrlParameter.parameterName,
+      description:
+        "SSM Parameter Store name for MCP Server URL (used by AgentCore Runtime)",
+    });
+
+    new cdk.CfnOutput(this, "AgentCoreMastraX402MCPServerUrlParameterArn", {
+      value: mcpServerUrlParameter.parameterArn,
+      description: "SSM Parameter ARN (for IAM permissions verification)",
+    });
+
+    new cdk.CfnOutput(this, "AgentCoreMastraX402GeminiApiKeyParameter", {
+      value: geminiApiKeyParameter.parameterName,
+      description:
+        "SSM Parameter Store name for Gemini API Key (update manually if needed)",
+    });
+
+    new cdk.CfnOutput(this, "AgentCoreMastraRuntimeArn", {
+      value: agentCoreRuntime.attrAgentRuntimeArn,
+      description: "Amazon Bedrock AgentCore Runtime ARN",
+    });
+
+    new cdk.CfnOutput(this, "AgentCoreMastraRuntimeRegion", {
+      value: region,
+      description: "AWS Region for runtime resources",
+    });
+
+    new cdk.CfnOutput(this, "AgentCoreMastraRuntimeId", {
+      value: agentCoreRuntime.attrAgentRuntimeId,
+      description: "Amazon Bedrock AgentCore Runtime ID",
+    });
+
+    new cdk.CfnOutput(this, "AgentCoreMastraEndpointArn", {
+      value: agentCoreEndpoint.attrAgentRuntimeEndpointArn,
+      description: "Amazon Bedrock AgentCore Runtime Endpoint ARN",
+    });
+
+    new cdk.CfnOutput(this, "AgentCoreMastraFrontendUrl", {
+      value: `http://${frontendService.loadBalancer.loadBalancerDnsName}`,
+      description: "Frontend Application Load Balancer URL",
+    });
+
+    new cdk.CfnOutput(this, "AgentCoreMastraX402VpcId", {
       value: vpc.vpcId,
       description: "VPC ID",
     });

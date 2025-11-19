@@ -17,6 +17,7 @@
       "**/out",
       "**/target",
       "**/public",
+      "**/cdk.out",
       "**/docs",
       "**/.next",
       "pkgs/mcp/bundle.js"
