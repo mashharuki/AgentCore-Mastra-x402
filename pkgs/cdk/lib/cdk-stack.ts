@@ -503,6 +503,7 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
               // CfnRuntimeEndpointから取得した正式なARN
               AGENTCORE_RUNTIME_ARN:
                 agentCoreEndpoint.attrAgentRuntimeEndpointArn,
+              AGENTCORE_RUNTIME_QUALIFIER: "MastraAgentRuntimeEndpoint",
             },
             logDriver: ecs.LogDrivers.awsLogs({
               streamPrefix: "agentcore-frontend",
