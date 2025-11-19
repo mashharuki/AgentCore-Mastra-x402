@@ -501,8 +501,7 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
               AWS_REGION: this.region,
               // AgentCore Runtime Endpoint ARN (正しいエンドポイントARNを使用)
               // CfnRuntimeEndpointから取得した正式なARN
-              AGENTCORE_RUNTIME_ARN:
-                agentCoreEndpoint.attrAgentRuntimeEndpointArn,
+              AGENTCORE_RUNTIME_ARN: agentCoreEndpoint.attrAgentRuntimeArn,
               AGENTCORE_RUNTIME_QUALIFIER: "MastraAgentRuntimeEndpoint",
             },
             logDriver: ecs.LogDrivers.awsLogs({
