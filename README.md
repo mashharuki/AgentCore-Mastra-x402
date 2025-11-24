@@ -217,7 +217,7 @@ pnpm cdk run deploy 'AgentCoreMastraX402Stack'
 pnpm cdk run destroy 'AgentCoreMastraX402Stack' --force
 ```
 
-### ECRにプッシュしたコンテナイメージは手動で削除が必要
+### ECRにプッシュしたコンテナリポジトリ＆イメージは手動で削除が必要
 
 - `x402-backend-api`
 - `agentcore-mastra-frontend`
