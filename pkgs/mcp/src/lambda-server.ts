@@ -31,7 +31,7 @@ const client = withPaymentInterceptor(axios.create({ baseURL }), account);
 
 // Create an MCP server
 const server = new McpServer({
-  name: "x402 & walrus MCP Server",
+  name: "x402 MCP Server",
   version: "1.0.0",
 });
 
