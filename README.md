@@ -223,3 +223,8 @@ pnpm cdk run destroy 'AgentCoreMastraX402Stack' --force
 ## ステーブルコイン決済履歴
 
 ![](./docs/imgs/2.png)
+
+## 参考文献
+- [AI Builders Day プレイベント資料](https://speakerdeck.com/mashharuki/amazon-bedrock-agentcore-x-aws-cdk-x-mastra-x-x402-deci-shi-dai-jin-rong-ai-agentwozuo-rou)
+- [2025年のキャッシュレス決済比率を算出しました](https://www.meti.go.jp/press/2025/03/20260331006/20260331006.html)
+- [「ステーブルコイン決済は低コスト」という神話を検証する](https://note.com/decentier/n/ned0047c30094)
