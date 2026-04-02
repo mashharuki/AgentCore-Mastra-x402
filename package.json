@@ -11,6 +11,7 @@
     "frontend": "pnpm --filter frontend",
     "mastra-agent": "pnpm --filter mastra-agent",
     "mcp": "pnpm --filter mcp",
+    "scripts": "pnpm --filter scripts",
     "x402server": "pnpm --filter x402server"
   },
   "devDependencies": {
