@@ -228,3 +228,4 @@ pnpm cdk run destroy 'AgentCoreMastraX402Stack' --force
 - [AI Builders Day プレイベント資料](https://speakerdeck.com/mashharuki/amazon-bedrock-agentcore-x-aws-cdk-x-mastra-x-x402-deci-shi-dai-jin-rong-ai-agentwozuo-rou)
 - [2025年のキャッシュレス決済比率を算出しました](https://www.meti.go.jp/press/2025/03/20260331006/20260331006.html)
 - [「ステーブルコイン決済は低コスト」という神話を検証する](https://note.com/decentier/n/ned0047c30094)
+- [Amazon Bedrock AgentCoreとCDKとMastraとx402で構築する金融AIエージェント！](https://zenn.dev/mashharuki/articles/x402_agentcore-1)
