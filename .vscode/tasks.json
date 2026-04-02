@@ -1,0 +1,49 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Workshop: Verify toolchain",
+      "type": "shell",
+      "command": "node -v && pnpm -v && aws --version",
+      "problemMatcher": []
+    },
+    {
+      "label": "MCP: build",
+      "type": "shell",
+      "command": "pnpm mcp build",
+      "problemMatcher": []
+    },
+    {
+      "label": "x402server: dev",
+      "type": "shell",
+      "command": "pnpm x402server dev",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "mastra-agent: dev",
+      "type": "shell",
+      "command": "pnpm mastra-agent dev",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "frontend: dev",
+      "type": "shell",
+      "command": "pnpm frontend dev",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Workshop: Bootstrap local flow",
+      "type": "shell",
+      "command": "echo 'Run individual tasks in order: MCP: build -> x402server: dev -> mastra-agent: dev -> frontend: dev'",
+      "dependsOn": [
+        "Workshop: Verify toolchain",
+        "MCP: build"
+      ],
+      "dependsOrder": "sequence",
+      "problemMatcher": []
+    }
+  ]
+}

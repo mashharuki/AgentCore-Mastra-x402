@@ -1,0 +1,46 @@
+{
+  "name": "AgentCore-Mastra-x402 Codespaces",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/aws-cli:1": {},
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "remoteEnv": {
+    "NEXT_TELEMETRY_DISABLED": "1",
+    "COREPACK_ENABLE_AUTO_PIN": "0"
+  },
+  "forwardPorts": [3000, 4021, 8080],
+  "portsAttributes": {
+    "3000": {
+      "label": "frontend",
+      "onAutoForward": "openPreview"
+    },
+    "4021": {
+      "label": "x402server",
+      "onAutoForward": "notify"
+    },
+    "8080": {
+      "label": "mastra-agent",
+      "onAutoForward": "notify"
+    }
+  },
+  "updateContentCommand": "bash .devcontainer/post-create.sh",
+  "customizations": {
+    "codespaces": {
+      "openFiles": [
+        "README.md",
+        "docs/CODESPACES_DEVCONTAINER_PLAN.md"
+      ]
+    },
+    "vscode": {
+      "extensions": [
+        "biomejs.biome",
+        "dbaeumer.vscode-eslint",
+        "ms-aws.aws-toolkit-vscode",
+        "github.copilot",
+        "github.copilot-chat"
+      ]
+    }
+  }
+}
