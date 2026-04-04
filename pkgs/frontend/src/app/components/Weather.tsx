@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { callx402Mcp } from "../actions";
 
+const performanceBarDelays = ["0.0", "0.1", "0.2", "0.3", "0.4"] as const;
+
 // Define the type for weather data
 interface WeatherData {
   text: string;
@@ -185,16 +187,16 @@ export function Weather() {
               <div className="flex items-center space-x-2 animate-slideInFromRight">
                 <span className="text-xs text-gray-400">Performance</span>
                 <div className="flex space-x-1">
-                  {[...Array(5)].map((_, i) => (
+                  {performanceBarDelays.map((delay, barIndex) => (
                     <div
-                      key={`perf-${i}`}
+                      key={`perf-${delay}`}
                       className={`w-1.5 h-6 rounded-full transition-all duration-500 ${
-                        i < (useGemini ? 5 : 3)
+                        barIndex < (useGemini ? 5 : 3)
                           ? "bg-gradient-to-t from-emerald-500 to-teal-500 animate-pulse"
                           : "bg-gray-700"
                       }`}
                       style={{
-                        animationDelay: `${i * 0.1}s`,
+                        animationDelay: `${delay}s`,
                       }}
                     />
                   ))}

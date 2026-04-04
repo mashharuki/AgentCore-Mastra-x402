@@ -6,7 +6,8 @@
   "main": "index.js",
   "scripts": {
     "biome:format": "npx biome format --write .",
-    "biome:check": "npx biome check --write .",
+    "biome:format:check": "npx biome format .",
+    "biome:check": "npx biome check .",
     "cdk": "pnpm --filter cdk",
     "frontend": "pnpm --filter frontend",
     "mastra-agent": "pnpm --filter mastra-agent",

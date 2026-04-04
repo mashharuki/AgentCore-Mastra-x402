@@ -28,10 +28,7 @@
   "updateContentCommand": "bash .devcontainer/post-create.sh",
   "customizations": {
     "codespaces": {
-      "openFiles": [
-        "README.md",
-        "docs/CODESPACES_DEVCONTAINER_PLAN.md"
-      ]
+      "openFiles": ["README.md", "docs/CODESPACES_DEVCONTAINER_PLAN.md"]
     },
     "vscode": {
       "extensions": [

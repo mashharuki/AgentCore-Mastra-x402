@@ -38,10 +38,7 @@
       "label": "Workshop: Bootstrap local flow",
       "type": "shell",
       "command": "echo 'Run individual tasks in order: MCP: build -> x402server: dev -> mastra-agent: dev -> frontend: dev'",
-      "dependsOn": [
-        "Workshop: Verify toolchain",
-        "MCP: build"
-      ],
+      "dependsOn": ["Workshop: Verify toolchain", "MCP: build"],
       "dependsOrder": "sequence",
       "problemMatcher": []
     }
