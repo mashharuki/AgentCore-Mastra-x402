@@ -3,29 +3,31 @@
 # Optimized for minimal production size
 # ==============================================================================
 
+ARG PNPM_VERSION=10.7.0
+
 # ------------------------------------------------------------------------------
 # Stage 1: Dependencies
 # ------------------------------------------------------------------------------
-FROM --platform=linux/amd64 node:20-alpine AS deps
+FROM node:20-alpine AS deps
 
 # Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN npm install -g pnpm@${PNPM_VERSION}
 
 WORKDIR /app
 
-# Copy package files
-COPY package.json pnpm-lock.yaml* ./
+# Copy package file
+COPY package.json ./
 
 # Install all dependencies (including dev dependencies needed for build)
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-lockfile
 
 # ------------------------------------------------------------------------------
 # Stage 2: Builder
 # ------------------------------------------------------------------------------
-FROM --platform=linux/amd64 node:20-alpine AS builder
+FROM node:20-alpine AS builder
 
 # Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN npm install -g pnpm@${PNPM_VERSION}
 
 WORKDIR /app
 
@@ -42,7 +44,7 @@ RUN pnpm run build
 # ------------------------------------------------------------------------------
 # Stage 3: Runner - Production runtime
 # ------------------------------------------------------------------------------
-FROM --platform=linux/amd64 node:20-alpine AS runner
+FROM node:20-alpine AS runner
 
 # Install dumb-init for proper signal handling
 RUN apk add --no-cache dumb-init
@@ -51,8 +53,8 @@ WORKDIR /app
 
 # Copy only production dependencies
 COPY --from=deps /app/package.json ./
-RUN corepack enable && corepack prepare pnpm@latest --activate && \
-    pnpm install --prod --frozen-lockfile && \
+RUN npm install -g pnpm@${PNPM_VERSION} && \
+    pnpm install --prod --no-lockfile && \
     pnpm store prune
 
 # Copy built application
