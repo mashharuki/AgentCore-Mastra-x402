@@ -48,6 +48,7 @@ export const createx402Agent = async (useGemini: boolean) => {
       `,
       model: selectedModel,
       tools: tools,
+      id: "x402-agent",
     });
   } catch (error) {
     console.error("Failed to create x402 Agent:", error);
@@ -65,6 +66,7 @@ export const createx402Agent = async (useGemini: boolean) => {
       `,
       model: fallbackModel,
       tools: {},
+      id: "x402-agent-fallback",
     });
   }
 };

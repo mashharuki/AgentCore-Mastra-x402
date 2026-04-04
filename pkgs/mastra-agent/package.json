@@ -9,7 +9,8 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "lint": "eslint . --max-warnings 0",
-    "docker:build": "DOCKER_API_VERSION=1.43 docker build --platform linux/arm64 -t mastra-agent:latest ."
+    "docker:setup-multiarch": "DOCKER_API_VERSION=1.43 docker run --privileged --rm tonistiigi/binfmt --install arm64 && (DOCKER_API_VERSION=1.43 docker buildx create --name multiarch --driver docker-container --use || DOCKER_API_VERSION=1.43 docker buildx use multiarch) && DOCKER_API_VERSION=1.43 docker buildx inspect --bootstrap",
+    "docker:build": "DOCKER_API_VERSION=1.43 docker buildx build --builder multiarch --platform linux/arm64 -t mastra-agent:latest --load ."
   },
   "dependencies": {
     "@ai-sdk/amazon-bedrock": "^3.0.30",

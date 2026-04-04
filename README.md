@@ -106,6 +106,10 @@ aws ecr create-repository --repository-name agentcore-mastra-agent --region ap-n
 Mastra製のAI Agent用Dockerイメージのビルド
 
 ```bash
+# 初回のみ: arm64クロスビルド用のbuilderを準備
+pnpm mastra-agent run docker:setup-multiarch
+
+# イメージをビルド
 pnpm mastra-agent run docker:build
 ```
 
