@@ -17,7 +17,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: '22'
   PNPM_VERSION: '9'
 
 jobs:
@@ -227,30 +227,6 @@ jobs:
       - name: Run security audit
         run: pnpm audit --audit-level=moderate
         continue-on-error: true
-
-  # 依存関係の更新チェック
-  dependency-check:
-    name: Dependency Check
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Check for outdated dependencies
-        run: pnpm outdated || true
 
   # 最終ステータスの集約
   ci-success:
