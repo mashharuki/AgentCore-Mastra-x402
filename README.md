@@ -63,7 +63,7 @@ pnpm install
 pnpm scripts generate:evm-keypair
 ```
 
-> ここで生成された秘密鍵は後で使うのでメモしておいてください！
+> ここで生成された秘密鍵は`pkgs/scripts/evm-keypair.json`に書き出されます！
 
 ### ローカル開発
 
@@ -95,16 +95,18 @@ pnpm frontend dev
 
 #### 事前準備(Mastra AgentのECRリポジトリ作成とコンテナイメージプッシュ)
 
+> AWS CLIで認証済みであることが必要です！
+
 ECRリポジトリの作成
 
 ```bash
-aws ecr create-repository --repository-name agentcore-mastra-agent
+aws ecr create-repository --repository-name agentcore-mastra-agent --region ap-northeast-1
 ```
 
-Dockerイメージのビルド
+Mastra製のAI Agent用Dockerイメージのビルド
 
 ```bash
-docker build --platform linux/arm64 -t mastra-agent:latest .
+pnpm mastra-agent run docker:build
 ```
 
 Dockerイメージのタグづけとプッシュ
@@ -128,7 +130,7 @@ docker push $AWS_ACCOUNT_ID.dkr.ecr.ap-northeast-1.amazonaws.com/agentcore-mastr
 ECRリポジトリの作成
 
 ```bash
-aws ecr create-repository --repository-name agentcore-mastra-frontend
+aws ecr create-repository --repository-name agentcore-mastra-frontend --region ap-northeast-1
 ```
 
 Dockerイメージのビルドとプッシュ
@@ -180,11 +182,24 @@ pnpm cdk run deploy 'AgentCoreMastraX402Stack'
 pnpm cdk run destroy 'AgentCoreMastraX402Stack' --force
 ```
 
-### ECRにプッシュしたコンテナリポジトリ＆イメージは手動で削除が必要
+### ECRにプッシュしたコンテナリポジトリ＆イメージは別途削除が必要
 
-- `x402-backend-api`
-- `agentcore-mastra-frontend`
-- `agentcore-mastra-agent`
+```bash
+# x402-backend-api
+aws ecr delete-repository \
+  --repository-name x402-backend-api \
+  --force --region ap-northeast-1
+
+# agentcore-mastra-frontend
+aws ecr delete-repository \
+  --repository-name agentcore-mastra-frontend \
+  --force --region ap-northeast-1
+
+# agentcore-mastra-agent
+aws ecr delete-repository \
+  --repository-name agentcore-mastra-agent \
+  --force --region ap-northeast-1
+```
 
 ## CI パイプライン
 
