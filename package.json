@@ -7,7 +7,7 @@
   "scripts": {
     "biome:format": "npx biome format --write .",
     "biome:format:check": "npx biome format .",
-    "biome:check": "npx biome check .",
+    "biome:check": "npx biome check --write .",
     "cdk": "pnpm --filter cdk",
     "frontend": "pnpm --filter frontend",
     "mastra-agent": "pnpm --filter mastra-agent",

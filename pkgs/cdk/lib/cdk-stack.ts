@@ -1,3 +1,6 @@
+import { execSync } from "node:child_process";
+import * as fs from "node:fs";
+import { join } from "node:path";
 import * as cdk from "aws-cdk-lib";
 import * as agentcore from "aws-cdk-lib/aws-bedrockagentcore";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
@@ -11,9 +14,6 @@ import * as logs from "aws-cdk-lib/aws-logs";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 import type { Construct } from "constructs";
 import * as dotenv from "dotenv";
-import { execSync } from "node:child_process";
-import * as fs from "node:fs";
-import { join } from "node:path";
 dotenv.config();
 
 const { FACILITATOR_URL, ADDRESS, NETWORK, ENDPOINT_PATH, PRIVATE_KEY } =

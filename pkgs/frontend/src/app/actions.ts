@@ -1,10 +1,10 @@
 "use server";
 
+import { randomBytes } from "node:crypto";
 import {
   BedrockAgentCoreClient,
   InvokeAgentRuntimeCommand,
 } from "@aws-sdk/client-bedrock-agentcore";
-import { randomBytes } from "node:crypto";
 
 /**
  * AWS SDK を使用して AgentCore Runtime を呼び出す
