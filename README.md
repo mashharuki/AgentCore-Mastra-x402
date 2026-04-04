@@ -93,7 +93,7 @@ pnpm frontend dev
 
 ### AWSへのデプロイ
 
-#### 事前準備(Mastra AgentのECRリポジトリ作成とコンテナイメージプッシュ)
+#### 0. 事前準備(Mastra AgentのECRリポジトリ作成とコンテナイメージプッシュ)
 
 > AWS CLIで認証済みであることが必要です！
 
@@ -129,7 +129,7 @@ docker tag mastra-agent:latest $AWS_ACCOUNT_ID.dkr.ecr.ap-northeast-1.amazonaws.
 docker push $AWS_ACCOUNT_ID.dkr.ecr.ap-northeast-1.amazonaws.com/agentcore-mastra-agent:latest
 ```
 
-#### 事前準備(フロントエンド用のECRリポジトリ作成とコンテナイメージプッシュ)
+#### 1. 事前準備(フロントエンド用のECRリポジトリ作成とコンテナイメージプッシュ)
 
 ECRリポジトリの作成
 
@@ -147,15 +147,28 @@ aws ecr get-login-password --region ap-northeast-1 | \
   docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.ap-northeast-1.amazonaws.com
 
 # linux/amd64プラットフォーム向けにビルド (Fargate x86_64用)
-cd pkgs/frontend
-docker buildx build --platform linux/amd64 \
-  -t $AWS_ACCOUNT_ID.dkr.ecr.ap-northeast-1.amazonaws.com/agentcore-mastra-frontend:latest \
-  --push .
+pnpm frontend run docker:build
 
-cd ../..
+# タグ付け
+docker tag mastra-frontend:latest $AWS_ACCOUNT_ID.dkr.ecr.ap-northeast-1.amazonaws.com/agentcore-mastra-frontend:latest
+
+# プッシュ
+docker push $AWS_ACCOUNT_ID.dkr.ecr.ap-northeast-1.amazonaws.com/agentcore-mastra-frontend:latest
 ```
 
-#### 1. MCPサーバーとx402バックエンドをデプロイ
+#### 2. 環境変数のセット
+
+```bash
+cp ./pkgs/cdk/.env.example ./pkgs/cdk/.env
+```
+
+以下の値は上述のスクリプトで生成したものを設定してください。
+
+```bash
+PRIVATE_KEY=
+```
+
+#### 3. MCPサーバーとx402バックエンドをデプロイ
 
 ```bash
 # MCPをビルド（Lambda用）
@@ -165,7 +178,7 @@ pnpm mcp build
 pnpm cdk run deploy 'AgentCoreMastraX402Stack'
 ```
 
-#### 2. SSM パラメータストアへの環境変数追加設定
+#### 4. SSM パラメータストアへの環境変数追加設定
 
 以下の値について、パラメータストアに環境変数を設定してください。
 
