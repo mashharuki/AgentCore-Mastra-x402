@@ -4,6 +4,7 @@
   "private": true,
   "description": "",
   "main": "index.js",
+  "packageManager": "pnpm@10.33.0",
   "scripts": {
     "biome:format": "npx biome format --write .",
     "biome:format:check": "npx biome format .",

@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-PNPM_VERSION="10.7.0"
+PNPM_VERSION="10.33.0"
 CDK_VERSION="2"
 
 export NPM_CONFIG_PREFIX="${HOME}/.local"
