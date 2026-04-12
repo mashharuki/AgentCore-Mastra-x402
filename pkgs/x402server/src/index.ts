@@ -8,7 +8,9 @@ import { paymentMiddleware } from "x402-hono";
 
 config();
 
+// ファシリテーターのURL
 const facilitatorUrl = process.env.FACILITATOR_URL as Resource;
+// 支払い先のウォレットアドレス
 const payTo = process.env.ADDRESS as `0x${string}`;
 const network = process.env.NETWORK as Network;
 
@@ -17,6 +19,7 @@ if (!facilitatorUrl || !payTo || !network) {
   process.exit(1);
 }
 
+// Honoインスタンスを作成
 const app = new Hono();
 
 console.log("Server is running");

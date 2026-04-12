@@ -1,10 +1,6 @@
-import { execSync } from "node:child_process";
-import * as fs from "node:fs";
-import { join } from "node:path";
 import * as cdk from "aws-cdk-lib";
 import * as agentcore from "aws-cdk-lib/aws-bedrockagentcore";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
-import * as ecr from "aws-cdk-lib/aws-ecr";
 import * as ecr_assets from "aws-cdk-lib/aws-ecr-assets";
 import * as ecs from "aws-cdk-lib/aws-ecs";
 import * as ecsPatterns from "aws-cdk-lib/aws-ecs-patterns";
@@ -14,6 +10,9 @@ import * as logs from "aws-cdk-lib/aws-logs";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 import type { Construct } from "constructs";
 import * as dotenv from "dotenv";
+import { execSync } from "node:child_process";
+import * as fs from "node:fs";
+import { join } from "node:path";
 dotenv.config();
 
 // 環境変数から必要な値を取得
@@ -59,6 +58,8 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
         platform: ecr_assets.Platform.LINUX_AMD64,
       },
     );
+
+    // @TODO agentcore-mastra-frontendとagentcore-mastra-agent用のECRリポジトリもCDKで作れるようにする
 
     // Create ECS cluster
     const cluster = new ecs.Cluster(this, "AgentCoreMastraX402Cluster", {
@@ -256,6 +257,7 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
       );
     }
 
+    // Geminiを使うためのAPIキーをSSMのパラメータストアに登録する
     const geminiApiKeyParameter = new ssm.StringParameter(
       this,
       "GeminiApiKeyParameter",
