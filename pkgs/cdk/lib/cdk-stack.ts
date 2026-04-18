@@ -268,6 +268,13 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
     // Build Docker image for AgentCore Runtime using ECR Assets
     // Note: Environment variables like MCP_SERVER_URL must be set at runtime
     // since they contain CDK tokens that are resolved during deployment
+    const agentRepo = new ecr.Repository(this, "AgentCoreMastraAgentRepo", {
+      repositoryName: "agentcore-mastra-agent",
+      imageScanOnPush: true,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      emptyOnDelete: true,
+    });
+
     const agentCoreDockerImage = new ecr_assets.DockerImageAsset(
       this,
       "AgentCoreDockerImage",
@@ -474,12 +481,13 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
     // Fargateで Next.js Frontend をデプロイ
     //　===========================================================================
 
-    // Create ECR repository reference for Frontend
-    const frontendRepo = ecr.Repository.fromRepositoryName(
-      this,
-      "AgentCoreMastraFrontendRepo",
-      "agentcore-mastra-frontend",
-    );
+    // Create ECR repository for Frontend
+    const frontendRepo = new ecr.Repository(this, "AgentCoreMastraFrontendRepo", {
+      repositoryName: "agentcore-mastra-frontend",
+      imageScanOnPush: true,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      emptyOnDelete: true,
+    });
 
     // Create Fargate service for Frontend
     const frontendService =
@@ -603,6 +611,16 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
     new cdk.CfnOutput(this, "AgentCoreMastraFrontendUrl", {
       value: `http://${frontendService.loadBalancer.loadBalancerDnsName}`,
       description: "Frontend Application Load Balancer URL",
+    });
+
+    new cdk.CfnOutput(this, "AgentCoreMastraAgentEcrRepositoryUri", {
+      value: agentRepo.repositoryUri,
+      description: "ECR repository URI for mastra-agent image",
+    });
+
+    new cdk.CfnOutput(this, "AgentCoreMastraFrontendEcrRepositoryUri", {
+      value: frontendRepo.repositoryUri,
+      description: "ECR repository URI for frontend image",
     });
 
     new cdk.CfnOutput(this, "AgentCoreMastraX402VpcId", {
