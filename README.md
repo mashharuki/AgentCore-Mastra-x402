@@ -305,6 +305,12 @@ cp ./pkgs/cdk/.env.example ./pkgs/cdk/.env
 PRIVATE_KEY=
 ```
 
+これ加えて`GOOGLE_GENERATIVE_AI_API_KEY`の値を[Google AI Stuido](https://aistudio.google.com/)から取得する必要あります！
+
+```bash
+GOOGLE_GENERATIVE_AI_API_KEY=
+```
+
 #### 3. MCPサーバーとx402バックエンドをデプロイ
 
 ```bash
