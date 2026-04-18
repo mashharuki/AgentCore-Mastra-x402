@@ -94,3 +94,36 @@ The following environment variables need to be set during deployment:
 
 - Cloud Run gets the port number from the environment variable `PORT`
 - For security reasons, use Cloud Run settings or Secret Manager for setting environment variables in the production environment, not the .env file
+
+## API実行結果
+
+```json
+{
+  "error": "X-PAYMENT header is required",
+  "accepts": [
+    {
+      "scheme": "exact",
+      "network": "base-sepolia",
+      "maxAmountRequired": "1000",
+      "resource": "http://localhost:4021/weather",
+      "description": "",
+      "mimeType": "application/json",
+      "payTo": "0xe6AA1B60c4EC760668dB3C06d7A894c5Fd39D0aa",
+      "maxTimeoutSeconds": 300,
+      "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+      "outputSchema": {
+        "input": {
+          "type": "http",
+          "method": "GET",
+          "discoverable": true
+        }
+      },
+      "extra": {
+        "name": "USDC",
+        "version": "2"
+      }
+    }
+  ],
+  "x402Version": 1
+}
+```

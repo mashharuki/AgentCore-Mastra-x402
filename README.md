@@ -197,9 +197,18 @@ pnpm scripts generate:evm-keypair
 
 #### 1. x402サーバーの起動
 
+まず環境変数用のファイルをコピペする
+
+```bash
+cp ./pkgs/x402server/.env.example ./pkgs/x402server/.env
+```
+
 ```bash
 pnpm x402server dev
 ```
+
+起動後 `test.http`を使って稼働確認してもOK!  
+`GET`メソッド(署名データ無し)でアクセスすると402エラーが返ってくるはず！！
 
 #### 2. MCPのビルド
 

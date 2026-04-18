@@ -36,7 +36,8 @@
         "dbaeumer.vscode-eslint",
         "ms-aws.aws-toolkit-vscode",
         "github.copilot",
-        "github.copilot-chat"
+        "github.copilot-chat",
+        "humao.rest-client"
       ]
     }
   }
