@@ -230,49 +230,14 @@ pnpm frontend dev
 
 ### AWSへのデプロイ
 
-#### 0. 事前準備(Mastra AgentのECRリポジトリ作成とコンテナイメージプッシュ)
+#### 0. 事前準備(フロントエンド用コンテナイメージのプッシュ)
 
 > AWS CLIで認証済みであることが必要です！
-
-ECRリポジトリの作成
-
-```bash
-aws ecr create-repository --repository-name agentcore-mastra-agent --region ap-northeast-1
-```
-
-Mastra製のAI Agent用Dockerイメージのビルド
-
-```bash
-# 初回のみ: arm64クロスビルド用のbuilderを準備
-pnpm mastra-agent run docker:setup-multiarch
-
-# イメージをビルド
-pnpm mastra-agent run docker:build
-```
-
-Dockerイメージのタグづけとプッシュ
-
-```bash
-export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-
-# ECRログイン
-aws ecr get-login-password --region ap-northeast-1 | \
-  docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.ap-northeast-1.amazonaws.com
-
-# タグ付け
-docker tag mastra-agent:latest $AWS_ACCOUNT_ID.dkr.ecr.ap-northeast-1.amazonaws.com/agentcore-mastra-agent:latest
-
-# プッシュ
-docker push $AWS_ACCOUNT_ID.dkr.ecr.ap-northeast-1.amazonaws.com/agentcore-mastra-agent:latest
-```
-
-#### 1. 事前準備(フロントエンド用のECRリポジトリ作成とコンテナイメージプッシュ)
-
-ECRリポジトリの作成
-
-```bash
-aws ecr create-repository --repository-name agentcore-mastra-frontend --region ap-northeast-1
-```
+>
+> ECRリポジトリ `agentcore-mastra-agent` / `agentcore-mastra-frontend` はCDKスタックで自動作成されます。
+> そのため、手動での ECR create-repository は不要です。
+>
+> Mastra Agent側はCDKのDockerImageAssetでビルドされるため、手動ビルド・手動pushは不要です。
 
 Dockerイメージのビルドとプッシュ
 
@@ -293,7 +258,7 @@ docker tag mastra-frontend:latest $AWS_ACCOUNT_ID.dkr.ecr.ap-northeast-1.amazona
 docker push $AWS_ACCOUNT_ID.dkr.ecr.ap-northeast-1.amazonaws.com/agentcore-mastra-frontend:latest
 ```
 
-#### 2. 環境変数のセット
+#### 1. 環境変数のセット
 
 ```bash
 cp ./pkgs/cdk/.env.example ./pkgs/cdk/.env
@@ -311,7 +276,7 @@ PRIVATE_KEY=
 GOOGLE_GENERATIVE_AI_API_KEY=
 ```
 
-#### 3. MCPサーバーとx402バックエンドをデプロイ
+#### 2. MCPサーバーとx402バックエンドをデプロイ
 
 ```bash
 # MCPをビルド（Lambda用）
@@ -321,7 +286,7 @@ pnpm mcp build
 pnpm cdk run deploy 'AgentCoreMastraX402Stack'
 ```
 
-#### 4. SSM パラメータストアへの環境変数追加設定
+#### 3. SSM パラメータストアへの環境変数追加設定
 
 以下の値について、パラメータストアに環境変数を設定してください。
 
@@ -342,24 +307,17 @@ pnpm cdk run deploy 'AgentCoreMastraX402Stack'
 pnpm cdk run destroy 'AgentCoreMastraX402Stack' --force
 ```
 
-### ECRにプッシュしたコンテナリポジトリ＆イメージは別途削除が必要
+### ECRにプッシュしたコンテナリポジトリ＆イメージの削除
 
 ```bash
 # x402-backend-api
 aws ecr delete-repository \
   --repository-name x402-backend-api \
   --force --region ap-northeast-1
-
-# agentcore-mastra-frontend
-aws ecr delete-repository \
-  --repository-name agentcore-mastra-frontend \
-  --force --region ap-northeast-1
-
-# agentcore-mastra-agent
-aws ecr delete-repository \
-  --repository-name agentcore-mastra-agent \
-  --force --region ap-northeast-1
 ```
+
+`agentcore-mastra-frontend` と `agentcore-mastra-agent` はCDK管理リソースのため、
+`pnpm cdk run destroy 'AgentCoreMastraX402Stack' --force` 実行時にあわせて削除されます。
 
 ## CI パイプライン
 

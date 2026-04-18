@@ -52,7 +52,7 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
     const backendRepo = ecr.Repository.fromRepositoryName(
       this,
       "AgentCoreMastraX402BackendRepo",
-      "x402-backend-api",
+      "x402-backend-api"
     );
 
     // Create ECS cluster
