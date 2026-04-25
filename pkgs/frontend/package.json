@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "docker:build": "docker buildx build --platform linux/amd64 -t mastra-frontend:latest ."
+    "docker:build": "docker buildx build --platform linux/amd64 -t mastra-frontend:latest --load ."
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-agentcore": "^3.716.0",

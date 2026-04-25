@@ -255,7 +255,10 @@ aws ecr get-login-password --region ap-northeast-1 | \
 # linux/amd64プラットフォーム向けにビルド (Fargate x86_64用)
 pnpm frontend run docker:build
 
-# タグ付け
+# mastra-frontend:latest というDockerイメージができていたらOK!
+docker image ls
+
+# タグ付け(CDKデプロイ後)
 docker tag mastra-frontend:latest $AWS_ACCOUNT_ID.dkr.ecr.ap-northeast-1.amazonaws.com/agentcore-mastra-frontend:latest
 
 # プッシュ
