@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -12,12 +12,17 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
   title: "x402 MCP AI Agent | AgentCore-Mastra",
   description:
     "AI-powered resource server integration with Amazon Bedrock and Google Gemini via Model Context Protocol",
   manifest: "/manifest.json",
-  themeColor: "#0F172A",
+  themeColor: "#0F1923",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -37,7 +42,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-900 min-h-screen`}
+        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased bg-aws-base min-h-screen`}
       >
         {children}
       </body>
