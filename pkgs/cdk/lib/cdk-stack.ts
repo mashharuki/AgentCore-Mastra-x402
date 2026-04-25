@@ -52,7 +52,7 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
     const backendRepo = ecr.Repository.fromRepositoryName(
       this,
       "AgentCoreMastraX402BackendRepo",
-      "x402-backend-api"
+      "x402-backend-api",
     );
 
     // Create ECS cluster
@@ -482,12 +482,16 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
     //　===========================================================================
 
     // Create ECR repository for Frontend
-    const frontendRepo = new ecr.Repository(this, "AgentCoreMastraFrontendRepo", {
-      repositoryName: "agentcore-mastra-frontend",
-      imageScanOnPush: true,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-      emptyOnDelete: true,
-    });
+    const frontendRepo = new ecr.Repository(
+      this,
+      "AgentCoreMastraFrontendRepo",
+      {
+        repositoryName: "agentcore-mastra-frontend",
+        imageScanOnPush: true,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+        emptyOnDelete: true,
+      },
+    );
 
     // Create Fargate service for Frontend
     const frontendService =

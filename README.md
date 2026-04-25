@@ -5,7 +5,7 @@ Amazon Bedrock AgentCore Mastra x402でつくる次世代金融AI Agentのサン
 
 ## アーキテクチャ
 
-![](./docs/agentcore-architecture-presentation-9-16-xlarge-font.png.png)
+![](./docs/imgs/agentcore-architecture-presentation-9-16-xlarge-font.png.png)
 
 ## 使っているAWSサービス一覧
 
@@ -193,6 +193,10 @@ pnpm scripts generate:evm-keypair
 
 > ここで生成された秘密鍵は`pkgs/scripts/evm-keypair.json`に書き出されます！
 
+生成されたアドレスについてはブロックチェーンエクスプローラーでその詳細が確認できます。
+
+[https://sepolia.basescan.org](https://sepolia.basescan.org)
+
 ### ローカル開発
 
 #### 1. x402サーバーの起動
@@ -276,6 +280,8 @@ PRIVATE_KEY=
 GOOGLE_GENERATIVE_AI_API_KEY=
 ```
 
+> 環境変数が正しくセットされていないとCDKコマンド実行時にエラーが発生します！
+
 #### 2. MCPサーバーとx402バックエンドをデプロイ
 
 ```bash
@@ -283,7 +289,8 @@ GOOGLE_GENERATIVE_AI_API_KEY=
 pnpm mcp build
 
 # CDKでデプロイ
-pnpm cdk run deploy 'AgentCoreMastraX402Stack'
+export CDK_DOCKER=/workspaces/AgentCore-Mastra-x402/docker-buildx-wrapper.sh
+pnpm cdk run deploy 'AgentCoreMastraX402Stack' --region ap-northeast-1
 ```
 
 #### 3. SSM パラメータストアへの環境変数追加設定
