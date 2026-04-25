@@ -291,9 +291,12 @@ GOOGLE_GENERATIVE_AI_API_KEY=
 # MCPをビルド（Lambda用）
 pnpm mcp build
 
+# 初めてCDKを使う場合は以下も実行すること
+cdk bootstrap
+
 # CDKでデプロイ
 export CDK_DOCKER=/workspaces/AgentCore-Mastra-x402/docker-buildx-wrapper.sh
-pnpm cdk run deploy 'AgentCoreMastraX402Stack' --region ap-northeast-1
+pnpm cdk run deploy 'AgentCoreMastraX402Stack'
 ```
 
 #### 3. SSM パラメータストアへの環境変数追加設定

@@ -8,6 +8,6 @@ const app = new cdk.App();
 new AgentCoreMastraX402Stack(app, "AgentCoreMastraX402Stack", {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: process.env.CDK_DEFAULT_REGION || "ap-northeast-1",
+    region: "ap-northeast-1",
   },
 });
