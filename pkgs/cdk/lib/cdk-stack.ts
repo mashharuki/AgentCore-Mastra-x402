@@ -49,11 +49,15 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
     // Fargateでx402のバックエンドサーバー(コンテンツサーバー)をデプロイ
     //　===========================================================================
 
-    // Create ECR repository reference (assuming it already exists)
-    const backendRepo = ecr.Repository.fromRepositoryName(
+    // Build Docker image for x402 backend at CDK deploy time
+    const backendDockerImage = new ecr_assets.DockerImageAsset(
       this,
-      "AgentCoreMastraX402BackendRepo",
-      "x402-backend-api",
+      "X402BackendDockerImage",
+      {
+        directory: join(__dirname, "../../x402server"),
+        file: "Dockerfile",
+        platform: ecr_assets.Platform.LINUX_AMD64,
+      },
     );
 
     // Create ECS cluster
@@ -74,7 +78,7 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
           memoryLimitMiB: 1024,
           desiredCount: 1,
           taskImageOptions: {
-            image: ecs.ContainerImage.fromEcrRepository(backendRepo, "latest"),
+            image: ecs.ContainerImage.fromDockerImageAsset(backendDockerImage),
             containerPort: 4021,
             environment: {
               PORT: "4021",
@@ -269,13 +273,6 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
     // Build Docker image for AgentCore Runtime using ECR Assets
     // Note: Environment variables like MCP_SERVER_URL must be set at runtime
     // since they contain CDK tokens that are resolved during deployment
-    const agentRepo = new ecr.Repository(this, "AgentCoreMastraAgentRepo", {
-      repositoryName: "agentcore-mastra-agent",
-      imageScanOnPush: true,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-      emptyOnDelete: true,
-    });
-
     const agentCoreDockerImage = new ecr_assets.DockerImageAsset(
       this,
       "AgentCoreDockerImage",
@@ -482,15 +479,14 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
     // Fargateで Next.js Frontend をデプロイ
     //　===========================================================================
 
-    // Create ECR repository for Frontend
-    const frontendRepo = new ecr.Repository(
+    // Build Docker image for Frontend at CDK deploy time
+    const frontendDockerImage = new ecr_assets.DockerImageAsset(
       this,
-      "AgentCoreMastraFrontendRepo",
+      "FrontendDockerImage",
       {
-        repositoryName: "agentcore-mastra-frontend",
-        imageScanOnPush: true,
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
-        emptyOnDelete: true,
+        directory: join(__dirname, "../../frontend"),
+        file: "Dockerfile",
+        platform: ecr_assets.Platform.LINUX_AMD64,
       },
     );
 
@@ -506,7 +502,7 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
           memoryLimitMiB: 1024,
           desiredCount: 1,
           taskImageOptions: {
-            image: ecs.ContainerImage.fromEcrRepository(frontendRepo, "latest"),
+            image: ecs.ContainerImage.fromDockerImageAsset(frontendDockerImage),
             containerPort: 3000,
             environment: {
               PORT: "3000",
@@ -619,12 +615,12 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
     });
 
     new cdk.CfnOutput(this, "AgentCoreMastraAgentEcrRepositoryUri", {
-      value: agentRepo.repositoryUri,
+      value: agentCoreDockerImage.repository.repositoryUri,
       description: "ECR repository URI for mastra-agent image",
     });
 
     new cdk.CfnOutput(this, "AgentCoreMastraFrontendEcrRepositoryUri", {
-      value: frontendRepo.repositoryUri,
+      value: frontendDockerImage.repository.repositoryUri,
       description: "ECR repository URI for frontend image",
     });
 

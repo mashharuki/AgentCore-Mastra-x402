@@ -3,7 +3,7 @@ import { google } from "@ai-sdk/google";
 import type { LanguageModelV2 } from "@ai-sdk/provider";
 
 // Gemini Model
-export const gemini: LanguageModelV2 = google("gemini-2.0-flash");
+export const gemini: LanguageModelV2 = google("gemini-3.1-flash-lite-preview");
 
 // Create Amazon Bedrock client
 // When running in AWS (ECS, Lambda, etc.), IAM role credentials are used automatically

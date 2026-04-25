@@ -299,12 +299,33 @@ export CDK_DOCKER=/workspaces/AgentCore-Mastra-x402/docker-buildx-wrapper.sh
 pnpm cdk run deploy 'AgentCoreMastraX402Stack'
 ```
 
-#### 3. SSM パラメータストアへの環境変数追加設定
+デプロイが完了すると以下のリソースが出力として表示されます。
 
-以下の値について、パラメータストアに環境変数を設定してください。
+```bash
 
-- `MCP_SERVER_URL`
-- `GOOGLE_GENERATIVE_AI_API_KEY`
+ ✅  AgentCoreMastraX402Stack
+
+✨  Deployment time: 313.45s
+
+Outputs:
+AgentCoreMastraX402Stack.AgentCoreMastraAgentEcrRepositoryUri = 
+AgentCoreMastraX402Stack.AgentCoreMastraEndpointArn = 
+AgentCoreMastraX402Stack.AgentCoreMastraFrontendEcrRepositoryUri = 
+AgentCoreMastraX402Stack.AgentCoreMastraFrontendServiceLoadBalancerDNS6A45A997 = 
+AgentCoreMastraX402Stack.AgentCoreMastraFrontendServiceServiceURLB3967C4A = 
+AgentCoreMastraX402Stack.AgentCoreMastraFrontendUrl = 
+AgentCoreMastraX402Stack.AgentCoreMastraRuntimeArn = 
+AgentCoreMastraX402Stack.AgentCoreMastraRuntimeId = 
+AgentCoreMastraX402Stack.AgentCoreMastraRuntimeRegion = 
+AgentCoreMastraX402Stack.AgentCoreMastraX402BackendApiUrl = 
+AgentCoreMastraX402Stack.AgentCoreMastraX402BackendServiceLoadBalancerDNSA5E88881 = 
+AgentCoreMastraX402Stack.AgentCoreMastraX402BackendServiceServiceURL21E71FD4 = 
+AgentCoreMastraX402Stack.AgentCoreMastraX402GeminiApiKeyParameter = 
+AgentCoreMastraX402Stack.AgentCoreMastraX402MCPServerUrl = 
+AgentCoreMastraX402Stack.AgentCoreMastraX402MCPServerUrlParameter = 
+AgentCoreMastraX402Stack.AgentCoreMastraX402MCPServerUrlParameterArn = 
+AgentCoreMastraX402Stack.AgentCoreMastraX402VpcId = 
+```
 
 ### デプロイ後にAmazon Bedrock AgentCore Runtimeでテストする際のテストデータ
 
