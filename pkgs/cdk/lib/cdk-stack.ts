@@ -16,6 +16,7 @@ import type { Construct } from "constructs";
 import * as dotenv from "dotenv";
 dotenv.config();
 
+// 環境変数から必要な値を取得
 const { FACILITATOR_URL, ADDRESS, NETWORK, ENDPOINT_PATH, PRIVATE_KEY } =
   process.env;
 
