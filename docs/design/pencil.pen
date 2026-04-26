@@ -1,0 +1,556 @@
+{
+  "version": "2.11",
+  "children": [
+    {
+      "type": "frame",
+      "id": "gEpcq",
+      "x": 0,
+      "y": 0,
+      "name": "AgentCore x402 – Desktop",
+      "width": 1440,
+      "fill": "#0F1923",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "1L1sm",
+          "name": "Header",
+          "width": "fill_container",
+          "height": 72,
+          "fill": "#0D1720",
+          "stroke": {
+            "align": "inside",
+            "thickness": {
+              "bottom": 1
+            },
+            "fill": "#1E2D3D"
+          },
+          "padding": [
+            0,
+            80
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "pp2E4",
+              "name": "Header Left",
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "5BpYC",
+                  "name": "Logo Box",
+                  "width": 36,
+                  "height": 36,
+                  "fill": "#FF9900",
+                  "cornerRadius": 6,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "5noIS",
+                      "name": "logoText",
+                      "fill": "#0F1923",
+                      "content": "x4",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "xi3lg",
+                  "name": "Brand Col",
+                  "layout": "vertical",
+                  "gap": 2,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "OeGx7",
+                      "name": "brandTitle",
+                      "fill": "#FFFFFF",
+                      "content": "x402 MCP AI Agent",
+                      "fontFamily": "Inter",
+                      "fontSize": 15,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "GjW44",
+                      "name": "brandSub",
+                      "fill": "#8D99A5",
+                      "content": "AgentCore-Mastra Platform",
+                      "fontFamily": "Geist Mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "mNC79",
+              "name": "Header Right",
+              "gap": 10,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "FuMDH",
+                  "name": "liveBadge",
+                  "fill": "#0F2418",
+                  "cornerRadius": 4,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "#1D8102"
+                  },
+                  "gap": 6,
+                  "padding": [
+                    5,
+                    12
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "ellipse",
+                      "id": "XF95y",
+                      "name": "liveDot",
+                      "fill": "#1D8102",
+                      "width": 6,
+                      "height": 6
+                    },
+                    {
+                      "type": "text",
+                      "id": "wUGuw",
+                      "name": "liveText",
+                      "fill": "#1D8102",
+                      "content": "Live",
+                      "fontFamily": "Geist Mono",
+                      "fontSize": 11,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "zNGFa",
+                  "name": "jawsBadge",
+                  "fill": "#1A1200",
+                  "cornerRadius": 4,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "#FF9900"
+                  },
+                  "padding": [
+                    5,
+                    12
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "TllcO",
+                      "name": "jawsText",
+                      "fill": "#FF9900",
+                      "content": "JAWS UG AI Builders Day",
+                      "fontFamily": "Geist Mono",
+                      "fontSize": 11,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "9Zd6t",
+          "name": "Hero Section",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 20,
+          "padding": [
+            80,
+            80,
+            60,
+            80
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "6lcEx",
+              "name": "Eyebrow",
+              "fill": "#1A1200",
+              "cornerRadius": 4,
+              "stroke": {
+                "align": "inside",
+                "thickness": 1,
+                "fill": "#FF9900"
+              },
+              "gap": 8,
+              "padding": [
+                6,
+                14
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "ellipse",
+                  "id": "2eHfs",
+                  "name": "eyebrowDot",
+                  "fill": "#FF9900",
+                  "width": 6,
+                  "height": 6
+                },
+                {
+                  "type": "text",
+                  "id": "F3Fzv",
+                  "name": "eyebrowText",
+                  "fill": "#FF9900",
+                  "content": "Powered by AWS · Mastra · x402",
+                  "fontFamily": "Geist Mono",
+                  "fontSize": 12,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "Fjyu2",
+              "name": "Hero Title",
+              "fill": "#FFFFFF",
+              "textGrowth": "fixed-width",
+              "width": 860,
+              "content": "Bedrock x402 AI Agent",
+              "lineHeight": 1.1,
+              "textAlign": "center",
+              "fontFamily": "Inter",
+              "fontSize": 60,
+              "fontWeight": "800"
+            },
+            {
+              "type": "frame",
+              "id": "z1L3W",
+              "name": "Accent Line",
+              "width": 60,
+              "height": 3,
+              "fill": "#FF9900",
+              "cornerRadius": 2
+            },
+            {
+              "type": "text",
+              "id": "Mc59A",
+              "name": "Hero Subtitle",
+              "fill": "#8D99A5",
+              "textGrowth": "fixed-width",
+              "width": 600,
+              "content": "x402でシームレスなステーブルコイン決済を行うAIエージェント",
+              "lineHeight": 1.6,
+              "textAlign": "center",
+              "fontFamily": "Inter",
+              "fontSize": 18,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "nR0Le",
+          "name": "Content Area",
+          "width": "fill_container",
+          "layout": "vertical",
+          "padding": [
+            0,
+            160,
+            80,
+            160
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "OTPdP",
+              "name": "Main Card",
+              "width": "fill_container",
+              "fill": "#0D1720",
+              "cornerRadius": 8,
+              "stroke": {
+                "align": "inside",
+                "thickness": {
+                  "right": 1,
+                  "bottom": 1,
+                  "left": 3
+                },
+                "fill": "#FF9900"
+              },
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "qLvRF",
+                  "name": "Form Section",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 20,
+                  "padding": [
+                    32,
+                    28
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "gOYiR",
+                      "name": "labelRow",
+                      "width": "fill_container",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "e5ZPC",
+                          "name": "inputLabel",
+                          "fill": "#FFFFFF",
+                          "content": "Enter your query",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "v16ai",
+                      "name": "Input Wrapper",
+                      "width": "fill_container",
+                      "height": 52,
+                      "fill": "#080E15",
+                      "cornerRadius": 6,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "#1E2D3D"
+                      },
+                      "padding": [
+                        0,
+                        16
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "9YEIn",
+                          "name": "inputPlaceholder",
+                          "fill": "#3D4F62",
+                          "content": "例: 天気を教えて、リソースサーバーから情報を取得して...",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "WGAhH",
+                      "name": "tip",
+                      "fill": "#3D4F62",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Tip: Try asking for weather information or any data from the resource server",
+                      "fontFamily": "Geist Mono",
+                      "fontSize": 11,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "zePMQ",
+                      "name": "Submit Button",
+                      "width": "fill_container",
+                      "height": 52,
+                      "fill": "#FF9900",
+                      "cornerRadius": 6,
+                      "gap": 10,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "sHXFl",
+                          "name": "btnLabel",
+                          "fill": "#0F1923",
+                          "content": "Execute AI Agent Query",
+                          "fontFamily": "Inter",
+                          "fontSize": 15,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "BrAQ1",
+                  "name": "Result Section",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 16,
+                  "padding": [
+                    0,
+                    28,
+                    32,
+                    28
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "vfpxU",
+                      "name": "resultHeader",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "yDsNe",
+                          "name": "resultTitle",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "ellipse",
+                              "id": "CKeb4",
+                              "name": "resultIcon",
+                              "fill": "#1D8102",
+                              "width": 8,
+                              "height": 8
+                            },
+                            {
+                              "type": "text",
+                              "id": "cPjSL",
+                              "name": "resultLabel",
+                              "fill": "#FFFFFF",
+                              "content": "AI Agent Response",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "moEHQ",
+                          "name": "resultMeta",
+                          "gap": 6,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "ellipse",
+                              "id": "zSrQH",
+                              "name": "resultMetaDot",
+                              "fill": "#1D8102",
+                              "width": 6,
+                              "height": 6
+                            },
+                            {
+                              "type": "text",
+                              "id": "aWmWz",
+                              "name": "resultMetaText",
+                              "fill": "#8D99A5",
+                              "content": "Response received",
+                              "fontFamily": "Geist Mono",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "lcSl5",
+                      "name": "Result Body",
+                      "width": "fill_container",
+                      "fill": "#080E15",
+                      "cornerRadius": 6,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "#1D8102"
+                      },
+                      "layout": "vertical",
+                      "padding": 20,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "ZgLkE",
+                          "name": "resultText",
+                          "fill": "#D1D9E0",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "AIエージェントからのレスポンスがここに表示されます。x402プロトコルを通じてリソースサーバーからデータを取得し、処理結果を出力します。",
+                          "lineHeight": 1.7,
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "mzTvn",
+                          "name": "resultFooter",
+                          "width": "fill_container",
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": {
+                              "top": 1
+                            },
+                            "fill": "#1E2D3D"
+                          },
+                          "padding": [
+                            16,
+                            0,
+                            0,
+                            0
+                          ],
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "V5MtX",
+                              "name": "resultSteps",
+                              "fill": "#8D99A5",
+                              "content": "3 steps  ·  agentcore-response",
+                              "fontFamily": "Geist Mono",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "JlTmW",
+                              "name": "resultComplete",
+                              "fill": "#1D8102",
+                              "content": "✓ Execution complete",
+                              "fontFamily": "Geist Mono",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
