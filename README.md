@@ -385,7 +385,11 @@ aws ecr delete-repository \
 
 ## フロントエンドのイメージ
 
-![](./docs/imgs/1.png)
+![](./docs/imgs/4.png)
+
+## フロントエンドのイメージ(402エラーが返ってきた場合)
+
+![](./docs/imgs/5.png)
 
 ## ステーブルコイン決済履歴
 
