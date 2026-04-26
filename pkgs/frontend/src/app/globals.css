@@ -41,14 +41,14 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --color-aws-orange: #FF9900;
-  --color-aws-base: #0F1923;
-  --color-aws-surface: #0D1720;
-  --color-aws-deep: #080E15;
-  --color-aws-border: #1E2D3D;
-  --color-aws-green: #1D8102;
-  --color-aws-dim: #8D99A5;
-  --color-aws-faint: #3D4F62;
+  --color-aws-orange: #ff9900;
+  --color-aws-base: #0f1923;
+  --color-aws-surface: #0d1720;
+  --color-aws-deep: #080e15;
+  --color-aws-border: #1e2d3d;
+  --color-aws-green: #1d8102;
+  --color-aws-dim: #8d99a5;
+  --color-aws-faint: #3d4f62;
 }
 
 :root {
@@ -139,12 +139,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #FF9900;
+  background: #ff9900;
   border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #CC7A00;
+  background: #cc7a00;
 }
 
 /* Selection color */

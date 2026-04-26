@@ -207,6 +207,7 @@ export class AgentCoreMastraX402Stack extends cdk.Stack {
           RUST_LOG: "info",
           ENDPOINT_PATH: ENDPOINT_PATH || "/weather",
           PRIVATE_KEY: PRIVATE_KEY || "",
+          NETWORK: NETWORK || "base-sepolia",
           RESOURCE_SERVER_URL: `http://${backendService.loadBalancer.loadBalancerDnsName}`,
         },
         timeout: cdk.Duration.minutes(15), // Lambda maximum timeout is 15 minutes (900 seconds)
