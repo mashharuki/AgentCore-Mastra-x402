@@ -238,6 +238,8 @@ pnpm frontend dev
 
 > AWS CLIで認証済みであることが必要です！
 >
+> CDKスタックを更新したことでこのステップは不要になりました。
+>
 > ECRリポジトリ `agentcore-mastra-agent` / `agentcore-mastra-frontend` はCDKスタックで自動作成されます。
 > そのため、手動での ECR create-repository は不要です。
 >
