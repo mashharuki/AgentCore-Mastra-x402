@@ -4,9 +4,13 @@
 
 ## GiHub リポジトリを自分のアカウントにフォークする
 
+フォーク対象のリポジトリは以下です。
+
+https://github.com/mashharuki/AgentCore-Mastra-x402
+
 ## GitHub CodeSpacesを起動する
 
-DevContainerの環境もセットアップする関係で少し時間がかかります
+DevContainerの環境もセットアップする関係で少し時間がかかります！
 
 ## Web3ウォレット用の秘密鍵・ウォレットアドレスを生成する
 
