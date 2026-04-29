@@ -19,6 +19,7 @@ WORKDIR /app
 COPY package.json ./
 
 # Install all dependencies (including dev dependencies needed for build)
+# Note: package.json pins exact versions to ensure reproducible builds
 RUN pnpm install --no-lockfile
 
 # ------------------------------------------------------------------------------
