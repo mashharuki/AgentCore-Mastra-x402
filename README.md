@@ -343,18 +343,6 @@ AgentCoreMastraX402Stack.AgentCoreMastraX402VpcId =
 pnpm cdk run destroy 'AgentCoreMastraX402Stack' --force
 ```
 
-### ECRにプッシュしたコンテナリポジトリ＆イメージの削除
-
-```bash
-# x402-backend-api
-aws ecr delete-repository \
-  --repository-name x402-backend-api \
-  --force --region ap-northeast-1
-```
-
-`agentcore-mastra-frontend` と `agentcore-mastra-agent` はCDK管理リソースのため、
-`pnpm cdk run destroy 'AgentCoreMastraX402Stack' --force` 実行時にあわせて削除されます。
-
 ## CI パイプライン
 
 このプロジェクトでは、GitHub Actionsを使用したCIパイプラインを実装しています。
@@ -391,7 +379,13 @@ aws ecr delete-repository \
 
 ## フロントエンドのイメージ(402エラーが返ってきた場合)
 
+> 十分なUSDCがないウォレットの秘密鍵を設定したりすると支払いが正常に行われず402エラーが返ってきます。
+
 ![](./docs/imgs/5.png)
+
+## フロントエンドのイメージ(正常版)
+
+![](./docs/imgs/6.png)
 
 ## ステーブルコイン決済履歴
 
