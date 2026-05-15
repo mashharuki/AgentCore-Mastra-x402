@@ -8,9 +8,19 @@
 
 https://github.com/mashharuki/AgentCore-Mastra-x402
 
+右上の「Fork」ボタンを押します。
+
+![](./imgs/7.png)
+
 ## GitHub CodeSpacesを起動する
 
-DevContainerの環境もセットアップする関係で少し時間がかかります！
+> DevContainerの環境もセットアップする関係で少し時間がかかります！
+
+フォークしてきたら緑色の「Codes」ボタン押して右側の「CodeSpaces」ボタンを押します。
+
+その後「Create CodeSpaces on main」ボタンを押せばOKです！
+
+![](./imgs/8.png)
 
 ## 依存関係のインストール
 
