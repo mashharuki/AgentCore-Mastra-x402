@@ -55,6 +55,10 @@ pnpm scripts generate:evm-keypair
 
 作成されたウォレットアドレスに少額の**ETH**と**USDC**を送ります。
 
+以下のサイトで自分のウォレットアドレスを入力して検索し、残高が増えていることを確認してください。
+
+[Base Sepoliaのブロックエクスプローラー](https://sepolia.basescan.org/)
+
 ## Google AI StudioでAPIキーを生成する
 
 以下のリンクから **Google AI Studio** にアクセスし、新しいプロジェクトを作成する。
