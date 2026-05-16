@@ -397,3 +397,4 @@ pnpm cdk run destroy 'AgentCoreMastraX402Stack' --force
 - [「ステーブルコイン決済は低コスト」という神話を検証する](https://note.com/decentier/n/ned0047c30094)
 - [Amazon Bedrock AgentCoreとCDKとMastraとx402で構築する金融AIエージェント！](https://zenn.dev/mashharuki/articles/x402_agentcore-1)
 - [Connpass イベントページ - Bedrock Agent/CDK/Mastra/x402で金融AIエージェント構築ハンズオン](https://aws-startup-community.connpass.com/event/388778/)
+- [Canva ワークショップ用のスライド](https://canva.link/vxh8njtfiklh8gc)
