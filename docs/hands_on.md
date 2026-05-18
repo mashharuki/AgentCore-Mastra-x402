@@ -1,6 +1,6 @@
 # ハンズオン手順書
 
-> 2026年4月29日 動作確認済み！
+> 2026年5月18日 動作確認済み！
 
 ## 座学編のスライドのリンク
 
@@ -70,7 +70,7 @@ https://aistudio.google.com/projects
 ## 環境変数のセットアップ
 
 ```bash
-cp ./pkgs/x402server/.env.example ./pkgs/x402server/.env
+cp ./pkgs/cdk/.env.example ./pkgs/cdk/.env
 ```
 
 以下の値を設定します。
@@ -93,11 +93,14 @@ pnpm mcp build
 ## CDKスタックのデプロイ
 
 ```bash
-# 初めてCDKを使う場合は以下も実行すること
+# 初めてCDKを使う場合は以下のコマンドも実行すること(pkgs/cdk ディレクトリ配下で実行する必要あり)
 cdk bootstrap
 
-# CDKでデプロイ
-export CDK_DOCKER=/workspaces/AgentCore-Mastra-x402/docker-buildx-wrapper.sh
+# CDKでデプロイ(以下のコマンドはルートディレクトリで実行する必要あり)
+# 事前にCloudFormationのテンプレートファイルを確認した場合には以下を実行
+pnpm cdk run synth
+
+# CDKスタックで一括デプロイ
 pnpm cdk run deploy 'AgentCoreMastraX402Stack'
 ```
 
